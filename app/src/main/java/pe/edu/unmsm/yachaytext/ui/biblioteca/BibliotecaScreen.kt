@@ -1,6 +1,5 @@
 package pe.edu.unmsm.yachaytext.ui.biblioteca
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -55,10 +54,10 @@ import pe.edu.unmsm.yachaytext.YachayApplication
 import pe.edu.unmsm.yachaytext.data.LibroRepository
 import pe.edu.unmsm.yachaytext.domain.tutor.IniciarConsulta
 import pe.edu.unmsm.yachaytext.ui.common.BotonPrincipal
+import pe.edu.unmsm.yachaytext.ui.common.ChipSeleccion
 import pe.edu.unmsm.yachaytext.ui.common.EstadoVacio
 import pe.edu.unmsm.yachaytext.ui.common.TarjetaLibro
 import pe.edu.unmsm.yachaytext.ui.theme.Ink
-import pe.edu.unmsm.yachaytext.ui.theme.Line
 import pe.edu.unmsm.yachaytext.ui.theme.Mist
 import pe.edu.unmsm.yachaytext.ui.theme.Paper
 import pe.edu.unmsm.yachaytext.ui.theme.TextSecondary
@@ -197,22 +196,7 @@ private fun FiltroAreas(areas: List<String>, seleccionada: String?, onArea: (Str
         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        item { Chip("Todas", seleccionada == null) { onArea(null) } }
-        items(areas) { area -> Chip(area, seleccionada == area) { onArea(area) } }
-    }
-}
-
-@Composable
-private fun Chip(texto: String, activo: Boolean, onClick: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(50),
-        color = if (activo) Ink else Paper,
-        border = if (activo) null else BorderStroke(1.dp, Line),
-        modifier = Modifier.height(44.dp),
-    ) {
-        Box(Modifier.padding(horizontal = 18.dp), contentAlignment = Alignment.Center) {
-            Text(texto, style = MaterialTheme.typography.labelLarge, color = if (activo) Paper else Ink)
-        }
+        item { ChipSeleccion("Todas", seleccionada == null, { onArea(null) }) }
+        items(areas) { area -> ChipSeleccion(area, seleccionada == area, { onArea(area) }) }
     }
 }

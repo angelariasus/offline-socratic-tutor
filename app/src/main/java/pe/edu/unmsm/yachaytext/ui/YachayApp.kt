@@ -34,7 +34,8 @@ import androidx.navigation.navArgument
 import pe.edu.unmsm.yachaytext.ui.biblioteca.BibliotecaRoute
 import pe.edu.unmsm.yachaytext.ui.chat.ChatRoute
 import pe.edu.unmsm.yachaytext.ui.chat.ChatViewModel
-import pe.edu.unmsm.yachaytext.ui.escaneo.EscaneoPendienteScreen
+import pe.edu.unmsm.yachaytext.ui.escaneo.EscaneoRoute
+import pe.edu.unmsm.yachaytext.ui.escaneo.RevisionRoute
 import pe.edu.unmsm.yachaytext.ui.inicio.InicioRoute
 import pe.edu.unmsm.yachaytext.ui.theme.Mist
 import pe.edu.unmsm.yachaytext.ui.theme.Paper
@@ -49,6 +50,7 @@ enum class TopLevelDestination(val route: String, val label: String, val icon: I
 }
 
 private const val RUTA_ESCANEO = "escaneo"
+private const val RUTA_REVISION = "revision"
 private const val RUTA_CHAT = "chat/{${ChatViewModel.ARG_CONVERSACION}}"
 private fun rutaChat(id: Long) = "chat/$id"
 
@@ -74,7 +76,19 @@ fun YachayApp(navController: NavHostController = rememberNavController()) {
             composable(TopLevelDestination.Biblioteca.route) {
                 BibliotecaRoute(onEscanear = { navController.navigate(RUTA_ESCANEO) }, onAbrirChat = { navController.navigate(rutaChat(it)) })
             }
-            composable(RUTA_ESCANEO) { EscaneoPendienteScreen(onVolver = { navController.popBackStack() }) }
+            composable(RUTA_ESCANEO) {
+                EscaneoRoute(onVolver = { navController.popBackStack() }, onTextoLeido = { navController.navigate(RUTA_REVISION) })
+            }
+            composable(RUTA_REVISION) {
+                RevisionRoute(
+                    onVolver = { navController.popBackStack() },
+                    onAbrirChat = { id ->
+                        navController.navigate(rutaChat(id)) { popUpTo(TopLevelDestination.Inicio.route) }
+                    },
+                    onEscanearOtra = { navController.popBackStack(RUTA_ESCANEO, inclusive = false) },
+                    onIrBiblioteca = { irAPestana(navController, TopLevelDestination.Biblioteca.route) },
+                )
+            }
             composable(TopLevelDestination.Tutor.route) {
                 TutorRoute(onAbrirChat = { navController.navigate(rutaChat(it)) })
             }
@@ -95,13 +109,7 @@ private fun BarraInferior(navController: NavHostController, currentRoute: String
         TopLevelDestination.entries.forEach { destination ->
             NavigationBarItem(
                 selected = currentRoute == destination.route,
-                onClick = {
-                    navController.navigate(destination.route) {
-                        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
+                onClick = { irAPestana(navController, destination.route) },
                 icon = { Icon(destination.icon, contentDescription = null) },
                 label = { Text(destination.label) },
                 colors = NavigationBarItemDefaults.colors(
@@ -117,5 +125,13 @@ private fun BarraInferior(navController: NavHostController, currentRoute: String
 private fun PlaceholderScreen(title: String) {
     Box(Modifier.fillMaxSize().background(Paper).statusBarsPadding(), contentAlignment = Alignment.Center) {
         Text(title, style = MaterialTheme.typography.headlineMedium)
+    }
+}
+
+private fun irAPestana(navController: NavHostController, ruta: String) {
+    navController.navigate(ruta) {
+        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
     }
 }

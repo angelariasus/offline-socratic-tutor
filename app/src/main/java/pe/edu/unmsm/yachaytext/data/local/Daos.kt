@@ -18,6 +18,10 @@ interface LibroDao {
 
     @Query("DELETE FROM libro WHERE id_libro = :id")
     suspend fun delete(id: Long)
+
+    /** num_paginas = páginas distintas escaneadas del libro. */
+    @Query("UPDATE libro SET num_paginas = (SELECT COUNT(DISTINCT nro_pagina) FROM fragmento WHERE id_libro = :id) WHERE id_libro = :id")
+    suspend fun actualizarPaginas(id: Long)
 }
 
 @Dao
@@ -34,6 +38,9 @@ interface FragmentoDao {
 
     @Query("SELECT COUNT(*) FROM fragmento")
     suspend fun count(): Int
+
+    @Query("DELETE FROM fragmento WHERE id_libro = :libroId AND nro_pagina = :nroPagina")
+    suspend fun deletePagina(libroId: Long, nroPagina: Int)
 }
 
 @Dao

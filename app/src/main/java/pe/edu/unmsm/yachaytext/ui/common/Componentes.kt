@@ -8,7 +8,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.unit.Dp
+import pe.edu.unmsm.yachaytext.ui.theme.TextDisabled
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -106,14 +112,82 @@ fun EstadoVacio(icono: ImageVector, titulo: String, texto: String, accion: Strin
 }
 
 @Composable
-fun BotonPrincipal(texto: String, onClick: () -> Unit, icono: ImageVector? = null, modifier: Modifier = Modifier) {
-    Surface(onClick = onClick, shape = RoundedCornerShape(50), color = Ink, modifier = modifier.height(56.dp)) {
+fun BotonPrincipal(
+    texto: String,
+    onClick: () -> Unit,
+    icono: ImageVector? = null,
+    modifier: Modifier = Modifier,
+    habilitado: Boolean = true,
+) {
+    val fondo = if (habilitado) Ink else Line
+    val contenido = if (habilitado) Paper else TextDisabled
+    Surface(onClick = onClick, enabled = habilitado, shape = RoundedCornerShape(50), color = fondo, modifier = modifier.height(56.dp)) {
         Row(Modifier.padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
             if (icono != null) {
-                Icon(icono, contentDescription = null, tint = Paper)
+                Icon(icono, contentDescription = null, tint = contenido)
                 Spacer(Modifier.width(10.dp))
             }
-            Text(texto, style = MaterialTheme.typography.labelLarge, color = Paper)
+            Text(texto, style = MaterialTheme.typography.labelLarge, color = contenido)
         }
+    }
+}
+
+@Composable
+fun BotonSecundario(texto: String, onClick: () -> Unit, icono: ImageVector? = null, modifier: Modifier = Modifier) {
+    Surface(onClick = onClick, shape = RoundedCornerShape(50), color = Paper, border = BorderStroke(1.dp, Line), modifier = modifier.height(56.dp)) {
+        Row(Modifier.padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+            if (icono != null) {
+                Icon(icono, contentDescription = null, tint = Ink)
+                Spacer(Modifier.width(10.dp))
+            }
+            Text(texto, style = MaterialTheme.typography.labelLarge, color = Ink)
+        }
+    }
+}
+
+@Composable
+fun ChipSeleccion(texto: String, activo: Boolean, onClick: () -> Unit, icono: ImageVector? = null) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(50),
+        color = if (activo) Ink else Paper,
+        border = if (activo) null else BorderStroke(1.dp, Line),
+        modifier = Modifier.height(44.dp),
+    ) {
+        Row(Modifier.padding(horizontal = 18.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (icono != null) {
+                Icon(icono, contentDescription = null, tint = if (activo) Paper else Ink, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+            }
+            Text(texto, style = MaterialTheme.typography.labelLarge, color = if (activo) Paper else Ink, maxLines = 1)
+        }
+    }
+}
+
+/** Campo de texto con el estilo de la app (borde suave, sin subrayado de Material). */
+@Composable
+fun CampoTexto(
+    valor: String,
+    onCambio: (String) -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier,
+    unaLinea: Boolean = true,
+    alturaMinima: Dp = 56.dp,
+    teclado: KeyboardOptions = KeyboardOptions.Default,
+) {
+    Surface(shape = RoundedCornerShape(if (unaLinea) 28.dp else 20.dp), color = Paper, border = BorderStroke(1.dp, Line), modifier = modifier) {
+        BasicTextField(
+            value = valor,
+            onValueChange = onCambio,
+            singleLine = unaLinea,
+            keyboardOptions = teclado,
+            textStyle = MaterialTheme.typography.bodyLarge.copy(color = Ink),
+            cursorBrush = SolidColor(Ink),
+            modifier = Modifier.fillMaxWidth().heightIn(min = alturaMinima).padding(horizontal = 20.dp, vertical = 16.dp),
+            decorationBox = { campo ->
+                if (valor.isEmpty()) Text(placeholder, style = MaterialTheme.typography.bodyLarge, color = TextSecondary)
+                campo()
+            },
+        )
     }
 }

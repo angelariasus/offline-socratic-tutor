@@ -1,6 +1,19 @@
 package pe.edu.unmsm.yachaytext.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import pe.edu.unmsm.yachaytext.ui.escaneo.AccionesRevision
+import pe.edu.unmsm.yachaytext.ui.escaneo.EscaneoScreen
+import pe.edu.unmsm.yachaytext.ui.escaneo.EscaneoUiState
+import pe.edu.unmsm.yachaytext.ui.escaneo.EtapaEscaneo
+import pe.edu.unmsm.yachaytext.ui.escaneo.FaseRevision
+import pe.edu.unmsm.yachaytext.ui.escaneo.LibroOpcion
+import pe.edu.unmsm.yachaytext.ui.escaneo.RevisionScreen
+import pe.edu.unmsm.yachaytext.ui.escaneo.RevisionUiState
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onRoot
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -99,6 +112,49 @@ class ScreenshotTest {
     @Test
     fun bibliotecaVacia() = capturar("biblioteca_vacia") {
         BibliotecaScreen(BibliotecaUiState(cargando = false), {}, {}, {}, {}, ahora = AHORA)
+    }
+
+    private fun escaneo(nombre: String, estado: EscaneoUiState, permiso: Boolean = true) = capturar(nombre) {
+        // Sin cámara en la JVM: un fondo que simula la página fotografiada.
+        EscaneoScreen(estado, permiso, {}, {}, {}, {}, vistaPrevia = { Box(Modifier.fillMaxSize().background(Color(0xFF6B6157))) })
+    }
+
+    @Test fun escaneoCamara() = escaneo("escaneo_camara", EscaneoUiState())
+
+    @Test fun escaneoLeyendo() = escaneo("escaneo_leyendo", EscaneoUiState(etapa = EtapaEscaneo.Leyendo))
+
+    @Test fun escaneoSinTexto() = escaneo("escaneo_sin_texto", EscaneoUiState(aviso = "No encontramos texto. Acerca la página y busca más luz."))
+
+    @Test fun escaneoSinPermiso() = escaneo("escaneo_sin_permiso", EscaneoUiState(), permiso = false)
+
+    private val textoOcr = "La fotosíntesis\n\nLas plantas fabrican su propio alimento mediante la fotosíntesis. Para ello necesitan luz del sol, agua y dióxido de carbono. Las raíces absorben el agua del suelo y las hojas captan la luz."
+
+    @Test
+    fun revisionLibroNuevo() = capturar("revision_libro_nuevo") {
+        RevisionScreen(RevisionUiState(texto = textoOcr, tituloNuevo = "Ciencia y Tecnología 5", areaNueva = "Ciencia y Tecnología", pagina = "42"), AccionesRevision())
+    }
+
+    @Test
+    fun revisionLibroExistente() = capturar("revision_libro_existente") {
+        RevisionScreen(
+            RevisionUiState(
+                texto = textoOcr,
+                libros = listOf(LibroOpcion(1, "Ciencia y Tecnología 5"), LibroOpcion(2, "Matemática 5")),
+                libroElegido = 1,
+                pagina = "43",
+            ),
+            AccionesRevision(),
+        )
+    }
+
+    @Test
+    fun revisionIndexando() = capturar("revision_indexando") {
+        RevisionScreen(RevisionUiState(texto = textoOcr, fase = FaseRevision.Indexando(2, 3)), AccionesRevision())
+    }
+
+    @Test
+    fun revisionListo() = capturar("revision_listo") {
+        RevisionScreen(RevisionUiState(texto = textoOcr, fase = FaseRevision.Listo(1, 3)), AccionesRevision())
     }
 
     @Test
