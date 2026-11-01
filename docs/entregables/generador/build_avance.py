@@ -204,6 +204,8 @@ B.append(table([3300, 2100, 3960], ['Componente', 'Versión', 'Uso'], [
     ['Navigation Compose', '2.10.2', 'Navegación entre pantallas'],
     ['Lifecycle (ViewModel)', '2.11.0', 'Capa de presentación (MVVM)'],
     ['Room', '2.8.5', 'Base de datos local (Figura 3.5)'],
+    ['CameraX', '1.6.2', 'Vista previa y captura de la cámara (RF01)'],
+    ['ML Kit Text Recognition v2 (modelo incluido)', '16.0.1', 'OCR sin conexión (RF01)'],
     ['Robolectric / Roborazzi', '4.17 / 1.77.0', 'Pruebas en la JVM y capturas de pantalla'],
 ]))
 B.append(note('Elaboración propia. BOM = lista de materiales que fija versiones compatibles de las bibliotecas de Compose; KSP = Kotlin Symbol Processing.'))
@@ -218,6 +220,7 @@ B.append(table([3500, 1300, 4560], ['Decisión', 'Requisito', 'Justificación'],
     ['Sin permiso INTERNET en el manifiesto', 'RNF01', 'Garantiza por diseño que ningún módulo acceda a la red.'],
     ['Inyección de dependencias manual, sin Hilt', 'RNF02', 'Evita bibliotecas y código generado que aumentan la memoria y el tiempo de arranque.'],
     ['Tipografía del sistema', 'RNF01', 'Las fuentes descargables requieren conexión.'],
+    ['Eliminar del manifiesto final los permisos de red que agrega ML Kit', 'RNF01', 'ML Kit los declara para enviar estadísticas de uso; sin ellos el OCR funciona igual y la app sigue sin acceso a la red.'],
 ]))
 B.append(note('Elaboración propia. API = nivel de la interfaz de programación de Android; APK = paquete de instalación de Android.'))
 
@@ -249,10 +252,30 @@ B.append(para('La Biblioteca lista los libros escaneados con un buscador que ign
 B.append(caption('Figura 3.10', 'Pantallas de Inicio y Biblioteca implementadas'))
 B.append(figure(f'{IMG_DIR}/fig3_10_inicio_biblioteca.png', 6.2, 104))
 B.append(note('Elaboración propia. Capturas generadas con Roborazzi con datos de ejemplo.'))
-B.append(para('Dos funciones quedan provisionalmente simplificadas: el botón de cámara conduce a una pantalla que anuncia el escaneo, cuya implementación con CameraX y ML Kit corresponde al Sprint 2 (RF01), y tocar un libro abre directamente una consulta ligada a él, hasta que se implemente la pantalla Detalle de libro (Tabla 3.8).'))
+B.append(para('Mientras no se implemente la pantalla Detalle de libro (Tabla 3.8), tocar un libro abre directamente una consulta ligada a él.'))
+
+B.append(heading('Escaneo e ingesta documental'))
+B.append(para('El flujo de ingesta documental de la Figura 3.6 se implementó en dos pantallas (Figura 3.11). La pantalla de escaneo muestra la vista previa de CameraX con un marco guía de proporción 3:4 que oscurece el exterior, un botón de linterna y un disparador; si el estudiante no concedió el permiso de cámara, explica para qué se usa antes de pedirlo. Al tomar la foto, ML Kit extrae el texto con el modelo incluido en el APK, sin descargar nada en el primer uso. Si no detecta texto, se pide acercar la página o buscar más luz.'))
+B.append(para('La pantalla de revisión permite corregir el texto reconocido, elegir el libro (por defecto, el último usado) o crear uno nuevo con su área curricular, e indicar el número de página. Al guardar, el texto se fragmenta, se vectoriza y se almacena en Room, mostrando el avance; al terminar, se ofrece preguntar al tutor sobre el libro, escanear otra página o ir a la biblioteca. Escanear de nuevo una página reemplaza sus fragmentos anteriores. La Tabla 3.14 resume los parámetros de la ingesta.'))
+B.append(caption('Figura 3.11', 'Pantallas de escaneo y revisión del texto'))
+B.append(figure(f'{IMG_DIR}/fig3_11_escaneo.png', 6.2, 105))
+B.append(note('Elaboración propia. Capturas generadas con Roborazzi; en la primera, un fondo uniforme reemplaza la imagen de la cámara.'))
+B.append(caption('Tabla 3.14', 'Parámetros de la ingesta documental'))
+B.append(table([3200, 2300, 3860], ['Parámetro', 'Valor', 'Justificación'], [
+    ['Tamaño máximo del fragmento', '500 caracteres', 'Unas 3 a 5 oraciones: suficiente contexto sin saturar la ventana del modelo de lenguaje.'],
+    ['Solapamiento', '1 oración', 'Evita perder el sentido en los cortes entre fragmentos.'],
+    ['Limpieza del OCR', 'Une líneas y palabras cortadas con guion', 'El OCR devuelve cada renglón por separado y corta palabras al final de línea.'],
+    ['Dimensión del vector', '512', 'Vectorizador léxico provisional; el definitivo dependerá del modelo de embeddings.'],
+    ['Tiempo máximo de captura', '12 segundos', 'Si la cámara no entrega la foto, se avisa en lugar de dejar la pantalla en espera.'],
+]))
+B.append(note('Elaboración propia.'))
+B.append(para('La vectorización usa por ahora un vectorizador léxico: convierte cada palabra (sin tildes, en minúsculas y sin plurales) y cada par de palabras consecutivas en posiciones de un vector de 512 dimensiones mediante una función hash, y normaliza el resultado. No requiere modelo, ocupa memoria despreciable y recupera los fragmentos que comparten vocabulario con la pregunta. Su limitación es que no reconoce sinónimos; por ello se reemplazará por el Text Embedder de MediaPipe con un modelo multilingüe, ya que los modelos que MediaPipe ofrece por defecto están entrenados en inglés. El reemplazo solo exige otra implementación de la misma interfaz.'))
+
+B.append(heading('Verificación en emulador'))
+B.append(para('Además de las pruebas en la JVM, el flujo se verificó en un emulador con el perfil del Samsung Galaxy A05 (Android 13, 2 GB de RAM), con el Wi-Fi y los datos móviles desactivados. Una prueba instrumentada dibuja una página con texto en castellano y confirma que ML Kit la lee sin conexión. La prueba manual de la cámara reveló dos problemas que se corrigieron. Primero, la vista previa podía quedar en negro porque PreviewView usa por defecto un SurfaceView, que se dibuja detrás de la ventana y queda tapado por el fondo de la pantalla; se cambió al modo compatible (TextureView). Segundo, la cámara virtual del emulador entrega fotogramas con marcas de tiempo inválidas y la captura nunca termina; aunque es un defecto del emulador, evidenció que la pantalla no daba respuesta al tocar el disparador, por lo que se añadió el mensaje «Tomando la foto…» y el tiempo máximo de la Tabla 3.14. Con la cámara emulada estándar el flujo completo funcionó: captura, OCR y aviso de texto no encontrado. Queda pendiente la prueba con una página real en un dispositivo físico.'))
 
 B.append(heading('Pruebas'))
-B.append(para('Las pruebas automatizadas se ejecutan en la máquina virtual de Java mediante Robolectric (Robolectric, s. f.), sin necesidad de emulador. Además, Roborazzi (Menju, s. f.) genera capturas de las pantallas en formato PNG con el perfil de una tableta de 8 pulgadas, lo que permite revisar la interfaz en cada iteración. La Tabla 3.13 resume las 25 pruebas implementadas, todas con resultado satisfactorio.'))
+B.append(para('Las pruebas automatizadas se ejecutan en la máquina virtual de Java mediante Robolectric (Robolectric, s. f.), sin necesidad de emulador. Además, Roborazzi (Menju, s. f.) genera capturas de las pantallas en formato PNG con el perfil de una tableta de 8 pulgadas, lo que permite revisar la interfaz en cada iteración. La Tabla 3.13 resume las 47 pruebas implementadas (46 en la JVM y una instrumentada en el emulador), todas con resultado satisfactorio.'))
 B.append(caption('Tabla 3.13', 'Pruebas automatizadas implementadas'))
 B.append(table([3600, 4160, 1600], ['Prueba', 'Qué verifica', 'Requisito'], [
     ['Persistencia del embedding', 'El vector guardado en Room se recupera sin pérdida.', 'RF02'],
@@ -263,7 +286,12 @@ B.append(table([3600, 4160, 1600], ['Prueba', 'Qué verifica', 'Requisito'], [
     ['Flujo del chat', 'De extremo a extremo: crear una consulta, enviar una pregunta y recibir la respuesta del tutor guardada en Room.', 'RF03'],
     ['Búsqueda y filtros de la biblioteca (3 pruebas)', 'La búsqueda sin tildes ni mayúsculas, la combinación de búsqueda y área, y que solo se ofrezcan áreas con libros.', 'RF02'],
     ['Tiempo relativo', 'Los textos «Hace un momento», «Hace 5 min», «Ayer», «Hace 4 días» y la fecha para antigüedades mayores.', '—'],
-    ['Capturas de pantalla (13)', 'El renderizado de la navegación, Inicio (con datos y vacío), Biblioteca (con libros, filtrada, sin resultados y vacía), la lista del tutor y los estados del chat.', '—'],
+    ['Fragmentador (5 pruebas)', 'La unión de líneas y guiones del OCR, el tamaño máximo, el solapamiento sin pérdida de oraciones y el corte de oraciones muy largas.', 'RF02'],
+    ['Vectorizador léxico (3 pruebas)', 'La norma unitaria, la indiferencia a tildes, mayúsculas y plurales, y que la pregunta recupere el fragmento que la responde.', 'RF02, RNF04'],
+    ['Ingesta de una página (2 pruebas)', 'La creación del libro con sus fragmentos y el conteo de páginas, y el reemplazo al volver a escanear una página.', 'RF02'],
+    ['Pantalla de escaneo (3 pruebas)', 'El aviso tras el tiempo máximo de captura, el aviso de foto sin texto y el paso a la revisión cuando hay texto.', 'RF01'],
+    ['OCR sin conexión (instrumentada)', 'En el emulador sin red, ML Kit lee una página con texto en castellano.', 'RF01, RNF01'],
+    ['Capturas de pantalla (21)', 'El renderizado de la navegación, Inicio, Biblioteca, la lista del tutor, los estados del chat, el escaneo (cámara, leyendo, sin texto y sin permiso) y la revisión (libro nuevo, libro existente, indexando y listo).', '—'],
 ]))
 B.append(note('Elaboración propia.'))
 

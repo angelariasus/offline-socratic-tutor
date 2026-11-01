@@ -116,4 +116,7 @@ mosaico([("Conversación con términos en quechua", "chat_conversacion"), ("Dict
 # ---------- Figura 3.10: Inicio y Biblioteca ----------
 mosaico([("Inicio", "inicio_con_datos"), ("Biblioteca filtrada por área", "biblioteca_filtrada"), ("Biblioteca vacía", "biblioteca_vacia")],
         "fig3_10_inicio_biblioteca.png")
+# ---------- Figura 3.11: escaneo y revisión ----------
+mosaico([("Escaneo con marco guía", "escaneo_camara"), ("Revisión del texto", "revision_libro_nuevo"), ("Página guardada", "revision_listo")],
+        "fig3_11_escaneo.png")
 print("ok")
