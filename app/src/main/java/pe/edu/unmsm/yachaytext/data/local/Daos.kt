@@ -16,6 +16,9 @@ interface LibroDao {
     @Query("SELECT * FROM libro WHERE id_libro = :id")
     suspend fun getById(id: Long): LibroEntity?
 
+    @Query("SELECT COUNT(*) FROM libro")
+    suspend fun count(): Int
+
     @Query("DELETE FROM libro WHERE id_libro = :id")
     suspend fun delete(id: Long)
 
@@ -23,6 +26,19 @@ interface LibroDao {
     @Query("UPDATE libro SET num_paginas = (SELECT COUNT(DISTINCT nro_pagina) FROM fragmento WHERE id_libro = :id) WHERE id_libro = :id")
     suspend fun actualizarPaginas(id: Long)
 }
+
+/** Fragmento con el título de su libro, para la búsqueda y para citar la fuente. */
+data class FragmentoConLibro(
+    val id: Long,
+    val libroId: Long,
+    val titulo: String,
+    val nroPagina: Int,
+    val texto: String,
+    val embedding: ByteArray,
+)
+
+/** Cambia cada vez que se insertan o borran fragmentos (los ids nuevos siempre crecen). */
+data class VersionFragmentos(val total: Int, val maxId: Long?)
 
 @Dao
 interface FragmentoDao {
@@ -32,9 +48,15 @@ interface FragmentoDao {
     @Query("SELECT * FROM fragmento WHERE id_libro = :libroId ORDER BY nro_pagina, orden")
     suspend fun getByLibro(libroId: Long): List<FragmentoEntity>
 
-    /** Todos los fragmentos, para la búsqueda por coseno en memoria (RNF04). */
-    @Query("SELECT * FROM fragmento")
-    suspend fun getAll(): List<FragmentoEntity>
+    /** Todos los fragmentos con su libro, para la búsqueda por coseno en memoria (RNF04). */
+    @Query(
+        "SELECT f.id_fragmento AS id, f.id_libro AS libroId, l.titulo AS titulo, f.nro_pagina AS nroPagina, " +
+            "f.texto AS texto, f.embedding AS embedding FROM fragmento f JOIN libro l ON l.id_libro = f.id_libro",
+    )
+    suspend fun getAllConLibro(): List<FragmentoConLibro>
+
+    @Query("SELECT COUNT(*) AS total, MAX(id_fragmento) AS maxId FROM fragmento")
+    suspend fun version(): VersionFragmentos
 
     @Query("SELECT COUNT(*) FROM fragmento")
     suspend fun count(): Int
@@ -53,6 +75,9 @@ interface ConversacionDao {
 
     @Query("SELECT * FROM conversacion WHERE id_conversacion = :id")
     suspend fun getById(id: Long): ConversacionEntity?
+
+    @Query("UPDATE conversacion SET titulo = :titulo WHERE id_conversacion = :id")
+    suspend fun renombrar(id: Long, titulo: String)
 }
 
 @Dao
@@ -64,6 +89,9 @@ interface MensajeDao {
     fun observeByConversacion(conversacionId: Long): Flow<List<MensajeEntity>>
 }
 
+/** Libro y página de un fragmento usado para responder un mensaje. */
+data class FuenteMensaje(val mensajeId: Long, val titulo: String, val nroPagina: Int, val puntaje: Float)
+
 @Dao
 interface ContextoRecuperadoDao {
     @Insert
@@ -71,4 +99,14 @@ interface ContextoRecuperadoDao {
 
     @Query("SELECT * FROM contexto_recuperado WHERE id_mensaje = :mensajeId ORDER BY puntaje_coseno DESC")
     suspend fun getByMensaje(mensajeId: Long): List<ContextoRecuperadoEntity>
+
+    @Query(
+        "SELECT cr.id_mensaje AS mensajeId, l.titulo AS titulo, f.nro_pagina AS nroPagina, cr.puntaje_coseno AS puntaje " +
+            "FROM contexto_recuperado cr " +
+            "JOIN fragmento f ON f.id_fragmento = cr.id_fragmento " +
+            "JOIN libro l ON l.id_libro = f.id_libro " +
+            "JOIN mensaje m ON m.id_mensaje = cr.id_mensaje " +
+            "WHERE m.id_conversacion = :conversacionId ORDER BY cr.puntaje_coseno DESC",
+    )
+    fun observeFuentes(conversacionId: Long): Flow<List<FuenteMensaje>>
 }

@@ -9,19 +9,26 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import pe.edu.unmsm.yachaytext.YachayApplication
 import pe.edu.unmsm.yachaytext.data.ChatRepository
+import pe.edu.unmsm.yachaytext.data.LibroRepository
+import pe.edu.unmsm.yachaytext.data.local.FuenteMensaje
 import pe.edu.unmsm.yachaytext.data.local.RolMensaje
 import pe.edu.unmsm.yachaytext.data.voz.Narrador
 import pe.edu.unmsm.yachaytext.domain.glosario.GlosarioQuechua
+import pe.edu.unmsm.yachaytext.domain.rag.BuscadorFragmentos
+import pe.edu.unmsm.yachaytext.domain.tutor.IniciarConsulta
 import pe.edu.unmsm.yachaytext.domain.tutor.Tutor
 import pe.edu.unmsm.yachaytext.domain.tutor.Turno
 
 class ChatViewModel(
     private val conversacionId: Long,
     private val repositorio: ChatRepository,
+    private val libros: LibroRepository,
+    private val buscador: BuscadorFragmentos,
     private val tutor: Tutor,
     private val glosario: GlosarioQuechua,
     private val narrador: Narrador,
@@ -30,26 +37,32 @@ class ChatViewModel(
     private val _estado = MutableStateFlow(ChatUiState())
     val estado: StateFlow<ChatUiState> = _estado.asStateFlow()
 
+    /** Libro de la conversación: limita la búsqueda a sus páginas. null = busca en toda la biblioteca. */
+    private var libroId: Long? = null
+
     init {
         viewModelScope.launch {
-            repositorio.conversacion(conversacionId)?.let { c -> _estado.update { it.copy(titulo = c.titulo) } }
+            repositorio.conversacion(conversacionId)?.let { c ->
+                libroId = c.libroId
+                val libro = c.libroId?.let { libros.obtener(it) }
+                // El subtítulo muestra el libro cuando el título de la conversación es otro.
+                _estado.update { it.copy(titulo = c.titulo, subtitulo = libro?.titulo?.takeIf { t -> t != c.titulo }) }
+            }
         }
         viewModelScope.launch {
-            repositorio.observarMensajes(conversacionId).collect { mensajes ->
-                _estado.update { estado ->
-                    estado.copy(
-                        mensajes = mensajes.map { m ->
-                            MensajeUi(
-                                id = m.id,
-                                rol = m.rol,
-                                texto = m.contenido,
-                                porVoz = m.porVoz,
-                                coincidencias = if (m.rol == RolMensaje.TUTOR) glosario.buscar(m.contenido) else emptyList(),
-                            )
-                        },
+            combine(repositorio.observarMensajes(conversacionId), repositorio.observarFuentes(conversacionId)) { mensajes, fuentes ->
+                val porMensaje = fuentes.groupBy { it.mensajeId }
+                mensajes.map { m ->
+                    MensajeUi(
+                        id = m.id,
+                        rol = m.rol,
+                        texto = m.contenido,
+                        porVoz = m.porVoz,
+                        coincidencias = if (m.rol == RolMensaje.TUTOR) glosario.buscar(m.contenido) else emptyList(),
+                        fuente = porMensaje[m.id]?.let(::describirFuente),
                     )
                 }
-            }
+            }.collect { mensajes -> _estado.update { it.copy(mensajes = mensajes) } }
         }
     }
 
@@ -63,8 +76,15 @@ class ChatViewModel(
         viewModelScope.launch {
             try {
                 repositorio.guardarMensaje(conversacionId, RolMensaje.ESTUDIANTE, texto, porVoz)
-                val respuesta = tutor.responder(historial, texto)
-                repositorio.guardarMensaje(conversacionId, RolMensaje.TUTOR, respuesta)
+                if (_estado.value.titulo == IniciarConsulta.TITULO_PROVISIONAL) {
+                    val titulo = tituloDesde(texto)
+                    repositorio.renombrar(conversacionId, titulo)
+                    _estado.update { it.copy(titulo = titulo) }
+                }
+                val contexto = buscador.buscar(texto, libroId)
+                val respuesta = tutor.responder(historial, texto, contexto)
+                val mensajeId = repositorio.guardarMensaje(conversacionId, RolMensaje.TUTOR, respuesta)
+                repositorio.guardarContexto(mensajeId, contexto)
             } finally {
                 _estado.update { it.copy(pensando = false) }
             }
@@ -94,8 +114,26 @@ class ChatViewModel(
             initializer {
                 val app = this[APPLICATION_KEY] as YachayApplication
                 val id = createSavedStateHandle().get<Long>(ARG_CONVERSACION) ?: error("Falta $ARG_CONVERSACION")
-                with(app.container) { ChatViewModel(id, chatRepository, tutor, glosario, narrador) }
+                with(app.container) { ChatViewModel(id, chatRepository, libroRepository, buscadorFragmentos, tutor, glosario, narrador) }
             }
         }
     }
+}
+
+/** «Ciencia y Tecnología 5 · pág. 42» o «… · págs. 42 y 43», con el libro más relevante. */
+internal fun describirFuente(fuentes: List<FuenteMensaje>): String? {
+    val principal = fuentes.maxByOrNull { it.puntaje } ?: return null
+    val paginas = fuentes.filter { it.titulo == principal.titulo }.map { it.nroPagina }.distinct().sorted()
+    val texto = when (paginas.size) {
+        1 -> "pág. ${paginas[0]}"
+        else -> "págs. ${paginas.dropLast(1).joinToString(", ")} y ${paginas.last()}"
+    }
+    return "${principal.titulo} · $texto"
+}
+
+/** Primera pregunta como título: hasta 40 caracteres sin cortar palabras. */
+internal fun tituloDesde(pregunta: String): String {
+    val limpio = pregunta.trim().trimEnd('?', '.', '!').trimStart('¿', '¡').replaceFirstChar { it.uppercase() }
+    if (limpio.length <= 40) return limpio
+    return limpio.take(40).substringBeforeLast(' ').trimEnd(',', ' ') + "…"
 }
