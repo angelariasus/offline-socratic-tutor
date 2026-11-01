@@ -95,17 +95,25 @@ img.save(OUT_DIR + "/fig3_8_navegacion.png", optimize=True)
 # ---------- Figura 3.9: capturas del chat (Roborazzi) ----------
 import os
 SHOTS = os.path.normpath(os.path.join(OUT_DIR, "..", "..", "..", "app", "screenshots"))
-capturas = [("Conversación con términos en quechua", "chat_conversacion"), ("Dictado por voz", "chat_grabando")]
-ims = [Image.open(f"{SHOTS}/{n}.png").convert("RGB") for _, n in capturas]
-GAP, LBL = 48, 56
-lienzo = Image.new("RGB", (sum(i.width for i in ims) + GAP * (len(ims) - 1) + 2, max(i.height for i in ims) + LBL), "white")
-d = ImageDraw.Draw(lienzo)
-x = 1
-for (etiqueta, _), im in zip(capturas, ims):
-    lienzo.paste(im, (x, 1))
-    d.rectangle((x - 1, 0, x + im.width, im.height + 1), outline="#C8C8C8", width=2)
-    f = font(24, True)
-    d.text((x + (im.width - d.textlength(etiqueta, font=f)) / 2, im.height + 16), etiqueta, fill="#1F2937", font=f)
-    x += im.width + GAP
-lienzo.save(OUT_DIR + "/fig3_9_chat.png", optimize=True)
+def mosaico(capturas, salida):
+    """Une capturas de Roborazzi lado a lado con su etiqueta debajo."""
+    ims = [Image.open(f"{SHOTS}/{n}.png").convert("RGB") for _, n in capturas]
+    GAP, LBL = 48, 56
+    lienzo = Image.new("RGB", (sum(i.width for i in ims) + GAP * (len(ims) - 1) + 2, max(i.height for i in ims) + LBL), "white")
+    d = ImageDraw.Draw(lienzo)
+    x = 1
+    for (etiqueta, _), im in zip(capturas, ims):
+        lienzo.paste(im, (x, 1))
+        d.rectangle((x - 1, 0, x + im.width, im.height + 1), outline="#C8C8C8", width=2)
+        f = font(24, True)
+        d.text((x + (im.width - d.textlength(etiqueta, font=f)) / 2, im.height + 16), etiqueta, fill="#1F2937", font=f)
+        x += im.width + GAP
+    lienzo.save(f"{OUT_DIR}/{salida}", optimize=True)
+
+
+mosaico([("Conversación con términos en quechua", "chat_conversacion"), ("Dictado por voz", "chat_grabando")], "fig3_9_chat.png")
+
+# ---------- Figura 3.10: Inicio y Biblioteca ----------
+mosaico([("Inicio", "inicio_con_datos"), ("Biblioteca filtrada por área", "biblioteca_filtrada"), ("Biblioteca vacía", "biblioteca_vacia")],
+        "fig3_10_inicio_biblioteca.png")
 print("ok")

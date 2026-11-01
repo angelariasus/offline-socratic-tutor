@@ -222,7 +222,7 @@ B.append(table([3500, 1300, 4560], ['Decisión', 'Requisito', 'Justificación'],
 B.append(note('Elaboración propia. API = nivel de la interfaz de programación de Android; APK = paquete de instalación de Android.'))
 
 B.append(heading('Estructura del proyecto'))
-B.append(para('El código sigue las capas de la Figura 3.3 dentro del paquete *pe.edu.unmsm.yachaytext*. El subpaquete *data* contiene la base de datos de Room (*data.local*), el repositorio de conversaciones y la síntesis de voz (*data.voz*); *domain* contiene el glosario castellano–quechua y el contrato del tutor socrático, y *ui* contiene el tema visual, la navegación y las pantallas de Compose con sus ViewModel. El OCR, los embeddings, el reconocimiento de voz y el modelo de lenguaje se incorporarán en los Sprints 2 y 3.'))
+B.append(para('El código sigue las capas de la Figura 3.3 dentro del paquete *pe.edu.unmsm.yachaytext*. El subpaquete *data* contiene la base de datos de Room (*data.local*), los repositorios de conversaciones, libros y perfil local, y la síntesis de voz (*data.voz*); *domain* contiene el glosario castellano–quechua, el contrato del tutor socrático y el caso de uso que inicia una consulta, y *ui* contiene el tema visual, la navegación y las pantallas de Compose con sus ViewModel. El OCR, los embeddings, el reconocimiento de voz y el modelo de lenguaje se incorporarán en los Sprints 2 y 3.'))
 
 B.append(heading('Base de datos local'))
 B.append(para('Las cinco entidades del modelo entidad-relación (Figura 3.5) se implementaron en Room con sus claves foráneas (Android Developers, s. f.). Al eliminar un libro se eliminan en cascada sus fragmentos, mientras que las conversaciones asociadas conservan su historial y su referencia al libro queda en nulo. Respecto del diseño se introdujeron dos precisiones: las fechas se almacenan como enteros (milisegundos transcurridos desde 1970) en lugar de texto, lo que simplifica el ordenamiento y el filtrado, y los embeddings se guardan normalizados como arreglos de números de punto flotante de 32 bits, de modo que la similitud de coseno se reduce a un producto punto.'))
@@ -243,8 +243,16 @@ B.append(table([2400, 2600, 2180, 2180], ['Castellano', 'Formas reconocidas', 'Q
 B.append(note('Elaboración propia. Entradas pendientes de validación por un docente de Educación Intercultural Bilingüe. La variante chanka no emplea consonantes aspiradas, de ahí la diferencia entre *saphi* y *sapi*.'))
 B.append(para('Mientras se integra el modelo de lenguaje (Sprint 3), el tutor se implementa con una clase de demostración que reproduce el diálogo del prototipo y responde con preguntas genéricas fuera de él. Ambas implementaciones comparten la misma interfaz, por lo que el reemplazo no afectará a la pantalla ni a la persistencia de los mensajes en Room.'))
 
+B.append(heading('Pantallas de Inicio y Biblioteca'))
+B.append(para('La pantalla de Inicio reemplaza los textos de relleno del prototipo por datos reales de Room: las tres conversaciones y los tres libros más recientes, con su antigüedad expresada en términos relativos («Hace 2 horas», «Ayer»). El campo «¿Tienes alguna pregunta?» abre una consulta nueva y el botón de cámara inicia el escaneo. La cabecera se redujo a la mitad de la altura del prototipo para dar espacio al contenido, y saluda al estudiante por su nombre cuando el perfil local lo registra.'))
+B.append(para('La Biblioteca lista los libros escaneados con un buscador que ignora tildes y mayúsculas, y con filtros por área curricular que solo muestran las áreas que tienen libros, para no ofrecer filtros vacíos. Ambas pantallas incluyen estados vacíos que orientan al estudiante hacia la acción siguiente (Figura 3.10).'))
+B.append(caption('Figura 3.10', 'Pantallas de Inicio y Biblioteca implementadas'))
+B.append(figure(f'{IMG_DIR}/fig3_10_inicio_biblioteca.png', 6.2, 104))
+B.append(note('Elaboración propia. Capturas generadas con Roborazzi con datos de ejemplo.'))
+B.append(para('Dos funciones quedan provisionalmente simplificadas: el botón de cámara conduce a una pantalla que anuncia el escaneo, cuya implementación con CameraX y ML Kit corresponde al Sprint 2 (RF01), y tocar un libro abre directamente una consulta ligada a él, hasta que se implemente la pantalla Detalle de libro (Tabla 3.8).'))
+
 B.append(heading('Pruebas'))
-B.append(para('Las pruebas automatizadas se ejecutan en la máquina virtual de Java mediante Robolectric (Robolectric, s. f.), sin necesidad de emulador. Además, Roborazzi (Menju, s. f.) genera capturas de las pantallas en formato PNG con el perfil de una tableta de 8 pulgadas, lo que permite revisar la interfaz en cada iteración. La Tabla 3.13 resume las 15 pruebas implementadas, todas con resultado satisfactorio.'))
+B.append(para('Las pruebas automatizadas se ejecutan en la máquina virtual de Java mediante Robolectric (Robolectric, s. f.), sin necesidad de emulador. Además, Roborazzi (Menju, s. f.) genera capturas de las pantallas en formato PNG con el perfil de una tableta de 8 pulgadas, lo que permite revisar la interfaz en cada iteración. La Tabla 3.13 resume las 25 pruebas implementadas, todas con resultado satisfactorio.'))
 B.append(caption('Tabla 3.13', 'Pruebas automatizadas implementadas'))
 B.append(table([3600, 4160, 1600], ['Prueba', 'Qué verifica', 'Requisito'], [
     ['Persistencia del embedding', 'El vector guardado en Room se recupera sin pérdida.', 'RF02'],
@@ -253,7 +261,9 @@ B.append(table([3600, 4160, 1600], ['Prueba', 'Qué verifica', 'Requisito'], [
     ['Similitud de coseno', 'El cálculo de la similitud entre vectores normalizados.', 'RNF04'],
     ['Glosario (3 pruebas)', 'La detección de términos y su posición, que no se confundan con partes de otras palabras («soleado») y la variante elegida.', 'RF05'],
     ['Flujo del chat', 'De extremo a extremo: crear una consulta, enviar una pregunta y recibir la respuesta del tutor guardada en Room.', 'RF03'],
-    ['Capturas de pantalla (7)', 'El renderizado de la navegación, la lista del tutor y los estados del chat (conversación, pensando, dictado, texto escrito y teléfono).', '—'],
+    ['Búsqueda y filtros de la biblioteca (3 pruebas)', 'La búsqueda sin tildes ni mayúsculas, la combinación de búsqueda y área, y que solo se ofrezcan áreas con libros.', 'RF02'],
+    ['Tiempo relativo', 'Los textos «Hace un momento», «Hace 5 min», «Ayer», «Hace 4 días» y la fecha para antigüedades mayores.', '—'],
+    ['Capturas de pantalla (13)', 'El renderizado de la navegación, Inicio (con datos y vacío), Biblioteca (con libros, filtrada, sin resultados y vacía), la lista del tutor y los estados del chat.', '—'],
 ]))
 B.append(note('Elaboración propia.'))
 
