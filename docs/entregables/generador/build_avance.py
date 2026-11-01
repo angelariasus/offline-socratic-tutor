@@ -278,11 +278,26 @@ B.append(caption('Figura 3.12', 'Respuesta del tutor con contexto recuperado del
 B.append(figure(f'{IMG_DIR}/fig3_12_rag.png', 3.6, 106))
 B.append(note('Elaboración propia. Captura generada por la prueba de extremo a extremo: se guarda una página, se abre la consulta desde la biblioteca y se pregunta «¿Qué absorben las raíces?».'))
 
+B.append(heading('Ajustes y primer uso'))
+B.append(para('La primera vez que se abre la aplicación, una pantalla de bienvenida presenta a Yachay y pide el nombre y el grado del estudiante; puede omitirse y completarse después. Estos datos forman un perfil local, sin cuentas ni servidor, y reemplazan la sección «Cuenta» (correo y teléfono) del prototipo. La pantalla de Ajustes agrupa las preferencias de la Tabla 3.15; cada una tiene un efecto inmediato en la aplicación (Figura 3.13). Las opciones «Apariencia» y «Color» del prototipo se postergan, porque el tema oscuro no forma parte de los requisitos.'))
+B.append(caption('Tabla 3.15', 'Preferencias del estudiante y su efecto en la aplicación'))
+B.append(table([2500, 2700, 3060, 1100], ['Preferencia', 'Opciones', 'Efecto', 'Requisito'], [
+    ['Nombre y grado', 'Texto libre; 1.º a 6.º de primaria y 1.º a 5.º de secundaria', 'Saludo personalizado en Inicio.', '—'],
+    ['Variante del quechua', 'Collao o chanka', 'Traducción mostrada para los términos del glosario (por ejemplo, agua → unu o yaku).', 'RF05'],
+    ['Tamaño de texto', 'Normal, grande (115 %) o muy grande (130 %)', 'Escala todo el texto de la aplicación.', 'RF04'],
+    ['Velocidad de voz', 'Lenta, normal o rápida', 'Velocidad del Text-to-Speech al escuchar las respuestas; incluye un botón para probarla.', 'RF04'],
+    ['Nivel de ayuda', 'Más pistas, normal o menos pistas', 'Cuánto revela el tutor: la cita con la palabra clave, la cita con una pregunta, o solo la página donde buscar.', 'RF03'],
+]))
+B.append(note('Elaboración propia. Las preferencias se guardan únicamente en el dispositivo.'))
+B.append(caption('Figura 3.13', 'Pantallas de Ajustes y de bienvenida'))
+B.append(figure(f'{IMG_DIR}/fig3_13_ajustes.png', 6.2, 107))
+B.append(note('Elaboración propia. Capturas generadas con Roborazzi. La segunda muestra los Ajustes con el tamaño de texto «muy grande».'))
+
 B.append(heading('Verificación en emulador'))
 B.append(para('Además de las pruebas en la JVM, el flujo se verificó en un emulador con el perfil del Samsung Galaxy A05 (Android 13, 2 GB de RAM), con el Wi-Fi y los datos móviles desactivados. Una prueba instrumentada dibuja una página con texto en castellano y confirma que ML Kit la lee sin conexión. La prueba manual de la cámara reveló dos problemas que se corrigieron. Primero, la vista previa podía quedar en negro porque PreviewView usa por defecto un SurfaceView, que se dibuja detrás de la ventana y queda tapado por el fondo de la pantalla; se cambió al modo compatible (TextureView). Segundo, la cámara virtual del emulador entrega fotogramas con marcas de tiempo inválidas y la captura nunca termina; aunque es un defecto del emulador, evidenció que la pantalla no daba respuesta al tocar el disparador, por lo que se añadió el mensaje «Tomando la foto…» y el tiempo máximo de la Tabla 3.14. Con la cámara emulada estándar el flujo completo funcionó: captura, OCR y aviso de texto no encontrado. Queda pendiente la prueba con una página real en un dispositivo físico.'))
 
 B.append(heading('Pruebas'))
-B.append(para('Las pruebas automatizadas se ejecutan en la máquina virtual de Java mediante Robolectric (Robolectric, s. f.), sin necesidad de emulador. Además, Roborazzi (Menju, s. f.) genera capturas de las pantallas en formato PNG con el perfil de una tableta de 8 pulgadas, lo que permite revisar la interfaz en cada iteración. La Tabla 3.13 resume las 58 pruebas implementadas (57 en la JVM y una instrumentada en el emulador), todas con resultado satisfactorio.'))
+B.append(para('Las pruebas automatizadas se ejecutan en la máquina virtual de Java mediante Robolectric (Robolectric, s. f.), sin necesidad de emulador. Además, Roborazzi (Menju, s. f.) genera capturas de las pantallas en formato PNG con el perfil de una tableta de 8 pulgadas, lo que permite revisar la interfaz en cada iteración. La Tabla 3.13 resume las 68 pruebas implementadas (67 en la JVM y una instrumentada en el emulador), todas con resultado satisfactorio.'))
 B.append(caption('Tabla 3.13', 'Pruebas automatizadas implementadas'))
 B.append(table([3600, 4160, 1600], ['Prueba', 'Qué verifica', 'Requisito'], [
     ['Persistencia del embedding', 'El vector guardado en Room se recupera sin pérdida.', 'RF02'],
@@ -298,11 +313,13 @@ B.append(table([3600, 4160, 1600], ['Prueba', 'Qué verifica', 'Requisito'], [
     ['Ingesta de una página (2 pruebas)', 'La creación del libro con sus fragmentos y el conteo de páginas, y el reemplazo al volver a escanear una página.', 'RF02'],
     ['Pantalla de escaneo (3 pruebas)', 'El aviso tras el tiempo máximo de captura, el aviso de foto sin texto y el paso a la revisión cuando hay texto.', 'RF01'],
     ['Buscador de fragmentos (4 pruebas)', 'Que el primer resultado responda la pregunta, el filtro por libro, el descarte de lo no relacionado, la actualización al reescanear y una búsqueda en 3000 fragmentos en ≤ 150 ms.', 'RF02, RNF04'],
-    ['Tutor de demostración (4 pruebas)', 'La cita de la oración más relacionada con la página, la respuesta con pregunta, el guion sin contexto y el saludo según el tema.', 'RF03'],
+    ['Tutor de demostración (5 pruebas)', 'La cita de la oración más relacionada con la página, la respuesta con pregunta, lo que revela según el nivel de ayuda, el guion sin contexto y el saludo según el tema.', 'RF03'],
+    ['Preferencias (3 pruebas)', 'Los valores por defecto, que todas las preferencias se guarden y se lean, y que un nombre vacío no se guarde.', '—'],
+    ['Flujo de bienvenida', 'De extremo a extremo: el nombre del primer uso aparece en Inicio y en Ajustes, y el cambio de variante se guarda.', 'RF05'],
     ['Formato del chat (2 pruebas)', 'El texto de la fuente («libro · pág. N» o «págs. N y M») y el título tomado de la primera pregunta.', 'RF03'],
     ['Flujo RAG', 'De extremo a extremo: con una página guardada, la consulta desde la biblioteca recibe una respuesta que cita la página y muestra la fuente.', 'RF02, RF03'],
     ['OCR sin conexión (instrumentada)', 'En el emulador sin red, ML Kit lee una página con texto en castellano.', 'RF01, RNF01'],
-    ['Capturas de pantalla (21)', 'El renderizado de la navegación, Inicio, Biblioteca, la lista del tutor, los estados del chat, el escaneo (cámara, leyendo, sin texto y sin permiso) y la revisión (libro nuevo, libro existente, indexando y listo).', '—'],
+    ['Capturas de pantalla (26)', 'El renderizado de la navegación, Inicio, Biblioteca, la lista del tutor, los estados del chat (incluida la variante chanka), el escaneo, la revisión, los Ajustes (normal y con texto muy grande) y la bienvenida.', '—'],
 ]))
 B.append(note('Elaboración propia.'))
 

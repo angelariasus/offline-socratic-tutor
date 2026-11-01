@@ -121,4 +121,7 @@ mosaico([("Escaneo con marco guía", "escaneo_camara"), ("Revisión del texto", 
         "fig3_11_escaneo.png")
 # ---------- Figura 3.12: respuesta con contexto (RAG) ----------
 mosaico([("Respuesta con la fuente citada", "flujo_rag")], "fig3_12_rag.png")
+# ---------- Figura 3.13: Ajustes y bienvenida ----------
+mosaico([("Ajustes", "ajustes"), ("Texto muy grande", "ajustes_texto_muy_grande"), ("Bienvenida", "bienvenida_completa")],
+        "fig3_13_ajustes.png")
 print("ok")
