@@ -22,15 +22,23 @@ class TutorDemo(private val demora: Long = 900) : Tutor {
         Tema.Ejemplo -> "Hola. Leíste que las plantas fabrican su propio alimento. ¿Qué crees que necesita una planta para lograrlo?"
     }
 
-    override suspend fun responder(historial: List<Turno>, consulta: String, contexto: List<FragmentoRecuperado>): String {
+    override suspend fun responder(historial: List<Turno>, consulta: String, contexto: List<FragmentoRecuperado>, ayuda: NivelAyuda): String {
         delay(demora)
         val turnosEstudiante = historial.count { it.rol == RolMensaje.ESTUDIANTE }
         val fuente = contexto.firstOrNull()
-        return if (fuente != null) conContexto(consulta, fuente, turnosEstudiante) else sinContexto(consulta, turnosEstudiante)
+        return if (fuente != null) conContexto(consulta, fuente, turnosEstudiante, ayuda) else sinContexto(consulta, turnosEstudiante)
     }
 
-    private fun conContexto(consulta: String, fuente: FragmentoRecuperado, turno: Int): String {
+    private fun conContexto(consulta: String, fuente: FragmentoRecuperado, turno: Int, ayuda: NivelAyuda): String {
         val cita = oracionMasRelacionada(consulta, fuente.texto)
+        if (ayuda == NivelAyuda.Menos) {
+            return "Tu libro tiene la respuesta en la página ${fuente.nroPagina}. Busca la oración que habla de esto. ¿Qué dice?"
+        }
+        if (ayuda == NivelAyuda.Mas) {
+            val clave = palabraClave(consulta, cita)
+            val pista = clave?.let { " Fíjate en la palabra «$it»." }.orEmpty()
+            return "En la página ${fuente.nroPagina} dice: «$cita».$pista ¿Qué te dice esa oración sobre tu pregunta?"
+        }
         return when (turno % 3) {
             0 -> "Busquemos la respuesta en tu libro. En la página ${fuente.nroPagina} dice: «$cita». ¿Qué parte de esa oración responde tu pregunta? Explícalo con tus palabras."
             1 -> "Mira lo que dice la página ${fuente.nroPagina}: «$cita». Con esa pista, ¿cómo responderías tu pregunta?"
@@ -63,6 +71,13 @@ class TutorDemo(private val demora: Long = 900) : Tutor {
         val mejor = oraciones.maxByOrNull { o -> palabras(o).count { p -> claves.any { c -> p.take(5) == c.take(5) } } }
             ?: fragmento
         return mejor.trimEnd('.', ' ')
+    }
+
+    /** Palabra de la cita que más se parece a la pregunta, tal como aparece en la cita. */
+    private fun palabraClave(consulta: String, cita: String): String? {
+        val claves = palabras(consulta)
+        return cita.split(Regex("[^\\p{L}0-9]+")).filter { it.length >= 4 }
+            .firstOrNull { p -> palabras(p).any { n -> claves.any { c -> n.take(5) == c.take(5) } } }
     }
 
     private fun palabras(texto: String): Set<String> =

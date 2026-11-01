@@ -33,6 +33,17 @@ class TutorDemoTest {
     }
 
     @Test
+    fun elNivelDeAyudaCambiaCuantoRevela() = runTest {
+        val menos = tutor.responder(emptyList(), "¿Qué absorben las raíces?", listOf(fragmento), NivelAyuda.Menos)
+        assertTrue(menos.contains("página 42"))
+        assertFalse(menos.contains("«"))
+
+        val mas = tutor.responder(emptyList(), "¿Qué absorben las raíces?", listOf(fragmento), NivelAyuda.Mas)
+        assertTrue(mas.contains("«Las raíces absorben el agua y los minerales del suelo»"))
+        assertTrue(mas.contains("Fíjate en la palabra «raíces»"))
+    }
+
+    @Test
     fun sinContextoSigueElGuionDelPrototipo() = runTest {
         val r = tutor.responder(emptyList(), "¿luz?")
         assertTrue(r.startsWith("La luz es una pieza importante"))

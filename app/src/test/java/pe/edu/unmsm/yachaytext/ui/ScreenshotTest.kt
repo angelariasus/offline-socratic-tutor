@@ -23,7 +23,15 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import pe.edu.unmsm.yachaytext.data.Preferencias
+import pe.edu.unmsm.yachaytext.data.TamanoTexto
+import pe.edu.unmsm.yachaytext.domain.glosario.VarianteQuechua
+import pe.edu.unmsm.yachaytext.domain.tutor.NivelAyuda
+import pe.edu.unmsm.yachaytext.ui.ajustes.AccionesAjustes
+import pe.edu.unmsm.yachaytext.ui.ajustes.AjustesScreen
+import pe.edu.unmsm.yachaytext.ui.ajustes.AjustesUiState
 import pe.edu.unmsm.yachaytext.ui.biblioteca.BibliotecaScreen
+import pe.edu.unmsm.yachaytext.ui.bienvenida.BienvenidaScreen
 import pe.edu.unmsm.yachaytext.ui.biblioteca.BibliotecaUiState
 import pe.edu.unmsm.yachaytext.ui.biblioteca.LibroUi
 import pe.edu.unmsm.yachaytext.ui.chat.ChatPreviewData
@@ -49,9 +57,9 @@ class ScreenshotTest {
     @get:Rule
     val composeRule = createComposeRule()
 
-    private fun capturar(nombre: String, contenido: @Composable () -> Unit) {
+    private fun capturar(nombre: String, escalaTexto: Float = 1f, contenido: @Composable () -> Unit) {
         composeRule.mainClock.autoAdvance = false
-        composeRule.setContent { YachayTheme { contenido() } }
+        composeRule.setContent { YachayTheme(escalaTexto) { contenido() } }
         composeRule.mainClock.advanceTimeBy(1_000)
         composeRule.onRoot().captureRoboImage("screenshots/$nombre.png")
     }
@@ -156,6 +164,24 @@ class ScreenshotTest {
     fun revisionListo() = capturar("revision_listo") {
         RevisionScreen(RevisionUiState(texto = textoOcr, fase = FaseRevision.Listo(1, 3)), AccionesRevision())
     }
+
+    private val ajustes = AjustesUiState(
+        Preferencias(nombre = "Ana", grado = "5.º de primaria", variante = VarianteQuechua.CHANKA, nivelAyuda = NivelAyuda.Normal),
+        nombre = "Ana",
+    )
+
+    @Test fun ajustesPantalla() = capturar("ajustes") { AjustesScreen(ajustes, AccionesAjustes()) }
+
+    @Test
+    fun ajustesTextoMuyGrande() = capturar("ajustes_texto_muy_grande", TamanoTexto.MuyGrande.escala) {
+        AjustesScreen(ajustes.copy(preferencias = ajustes.preferencias.copy(tamanoTexto = TamanoTexto.MuyGrande)), AccionesAjustes())
+    }
+
+    @Test fun bienvenidaVacia() = capturar("bienvenida") { BienvenidaScreen("", null, {}, {}, {}, {}) }
+
+    @Test fun bienvenidaCompleta() = capturar("bienvenida_completa") { BienvenidaScreen("Ana", "5.º de primaria", {}, {}, {}, {}) }
+
+    @Test fun chatChanka() = chat("chat_chanka", ChatPreviewData.conversacion.copy(variante = VarianteQuechua.CHANKA))
 
     @Test
     fun tutorLista() = capturar("tutor_lista") {

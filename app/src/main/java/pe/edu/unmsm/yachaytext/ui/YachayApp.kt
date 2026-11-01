@@ -23,7 +23,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -31,7 +30,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import pe.edu.unmsm.yachaytext.ui.ajustes.AjustesRoute
 import pe.edu.unmsm.yachaytext.ui.biblioteca.BibliotecaRoute
+import pe.edu.unmsm.yachaytext.ui.bienvenida.BienvenidaRoute
 import pe.edu.unmsm.yachaytext.ui.chat.ChatRoute
 import pe.edu.unmsm.yachaytext.ui.chat.ChatViewModel
 import pe.edu.unmsm.yachaytext.ui.escaneo.EscaneoRoute
@@ -49,13 +50,14 @@ enum class TopLevelDestination(val route: String, val label: String, val icon: I
     Ajustes("ajustes", "Ajustes", Icons.Outlined.Settings),
 }
 
+const val RUTA_BIENVENIDA = "bienvenida"
 private const val RUTA_ESCANEO = "escaneo"
 private const val RUTA_REVISION = "revision"
 private const val RUTA_CHAT = "chat/{${ChatViewModel.ARG_CONVERSACION}}"
 private fun rutaChat(id: Long) = "chat/$id"
 
 @Composable
-fun YachayApp(navController: NavHostController = rememberNavController()) {
+fun YachayApp(navController: NavHostController = rememberNavController(), rutaInicial: String = TopLevelDestination.Inicio.route) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
     val enPestana = TopLevelDestination.entries.any { it.route == currentRoute }
@@ -67,7 +69,7 @@ fun YachayApp(navController: NavHostController = rememberNavController()) {
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = TopLevelDestination.Inicio.route,
+            startDestination = rutaInicial,
             modifier = Modifier.padding(padding),
         ) {
             composable(TopLevelDestination.Inicio.route) {
@@ -92,7 +94,12 @@ fun YachayApp(navController: NavHostController = rememberNavController()) {
             composable(TopLevelDestination.Tutor.route) {
                 TutorRoute(onAbrirChat = { navController.navigate(rutaChat(it)) })
             }
-            composable(TopLevelDestination.Ajustes.route) { PlaceholderScreen("Ajustes") }
+            composable(RUTA_BIENVENIDA) {
+                BienvenidaRoute(onTerminar = {
+                    navController.navigate(TopLevelDestination.Inicio.route) { popUpTo(RUTA_BIENVENIDA) { inclusive = true } }
+                })
+            }
+            composable(TopLevelDestination.Ajustes.route) { AjustesRoute() }
             composable(
                 RUTA_CHAT,
                 arguments = listOf(navArgument(ChatViewModel.ARG_CONVERSACION) { type = NavType.LongType }),
@@ -121,16 +128,10 @@ private fun BarraInferior(navController: NavHostController, currentRoute: String
     }
 }
 
-@Composable
-private fun PlaceholderScreen(title: String) {
-    Box(Modifier.fillMaxSize().background(Paper).statusBarsPadding(), contentAlignment = Alignment.Center) {
-        Text(title, style = MaterialTheme.typography.headlineMedium)
-    }
-}
-
 private fun irAPestana(navController: NavHostController, ruta: String) {
     navController.navigate(ruta) {
-        popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+        // Inicio siempre está en la base de la pila (la bienvenida se retira al terminar).
+        popUpTo(TopLevelDestination.Inicio.route) { saveState = true }
         launchSingleTop = true
         restoreState = true
     }

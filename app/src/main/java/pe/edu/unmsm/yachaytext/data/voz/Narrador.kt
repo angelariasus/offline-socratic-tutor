@@ -6,6 +6,8 @@ import java.util.Locale
 
 /** Lee en voz alta las respuestas del tutor con el Text-to-Speech nativo (RF04). */
 interface Narrador {
+    /** 1 = velocidad normal; ver VelocidadVoz en Ajustes. */
+    var velocidad: Float
     fun leer(id: Long, texto: String)
     fun detener()
 }
@@ -16,6 +18,7 @@ interface Narrador {
  */
 class NarradorAndroid(context: Context) : Narrador {
     private var listo = false
+    override var velocidad: Float = 1f
     private val tts: TextToSpeech = TextToSpeech(context.applicationContext) { estado ->
         listo = estado == TextToSpeech.SUCCESS
         if (listo) configurarIdioma()
@@ -27,7 +30,9 @@ class NarradorAndroid(context: Context) : Narrador {
     }
 
     override fun leer(id: Long, texto: String) {
-        if (listo) tts.speak(texto, TextToSpeech.QUEUE_FLUSH, null, "mensaje-$id")
+        if (!listo) return
+        tts.setSpeechRate(velocidad)
+        tts.speak(texto, TextToSpeech.QUEUE_FLUSH, null, "mensaje-$id")
     }
 
     override fun detener() {

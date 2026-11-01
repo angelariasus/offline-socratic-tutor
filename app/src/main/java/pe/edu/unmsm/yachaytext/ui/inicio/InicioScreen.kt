@@ -48,7 +48,7 @@ import kotlinx.coroutines.launch
 import pe.edu.unmsm.yachaytext.YachayApplication
 import pe.edu.unmsm.yachaytext.data.ChatRepository
 import pe.edu.unmsm.yachaytext.data.LibroRepository
-import pe.edu.unmsm.yachaytext.data.PerfilRepository
+import pe.edu.unmsm.yachaytext.data.PreferenciasRepository
 import pe.edu.unmsm.yachaytext.domain.tutor.IniciarConsulta
 import pe.edu.unmsm.yachaytext.ui.biblioteca.LibroUi
 import pe.edu.unmsm.yachaytext.ui.common.EstadoVacio
@@ -73,13 +73,13 @@ data class InicioUiState(
 private const val RECIENTES = 3
 
 class InicioViewModel(
-    perfil: PerfilRepository,
+    preferencias: PreferenciasRepository,
     chat: ChatRepository,
     libros: LibroRepository,
     private val iniciarConsulta: IniciarConsulta,
 ) : ViewModel() {
 
-    val estado: StateFlow<InicioUiState> = combine(perfil.observar(), chat.observarConversaciones(), libros.observarLibros()) { p, c, l ->
+    val estado: StateFlow<InicioUiState> = combine(preferencias.observar(), chat.observarConversaciones(), libros.observarLibros()) { p, c, l ->
         InicioUiState(
             nombre = p.nombre,
             conversaciones = c.take(RECIENTES).map { ConversacionReciente(it.id, it.titulo, it.fechaInicio) },
@@ -97,7 +97,7 @@ class InicioViewModel(
         val Factory = viewModelFactory {
             initializer {
                 with((this[APPLICATION_KEY] as YachayApplication).container) {
-                    InicioViewModel(perfilRepository, chatRepository, libroRepository, iniciarConsulta)
+                    InicioViewModel(preferencias, chatRepository, libroRepository, iniciarConsulta)
                 }
             }
         }

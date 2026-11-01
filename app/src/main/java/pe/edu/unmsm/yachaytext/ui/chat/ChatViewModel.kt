@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import pe.edu.unmsm.yachaytext.YachayApplication
 import pe.edu.unmsm.yachaytext.data.ChatRepository
 import pe.edu.unmsm.yachaytext.data.LibroRepository
+import pe.edu.unmsm.yachaytext.data.PreferenciasRepository
 import pe.edu.unmsm.yachaytext.data.local.FuenteMensaje
 import pe.edu.unmsm.yachaytext.data.local.RolMensaje
 import pe.edu.unmsm.yachaytext.data.voz.Narrador
@@ -32,6 +33,7 @@ class ChatViewModel(
     private val tutor: Tutor,
     private val glosario: GlosarioQuechua,
     private val narrador: Narrador,
+    private val preferencias: PreferenciasRepository,
 ) : ViewModel() {
 
     private val _estado = MutableStateFlow(ChatUiState())
@@ -41,6 +43,9 @@ class ChatViewModel(
     private var libroId: Long? = null
 
     init {
+        viewModelScope.launch {
+            preferencias.observar().collect { p -> _estado.update { it.copy(variante = p.variante) } }
+        }
         viewModelScope.launch {
             repositorio.conversacion(conversacionId)?.let { c ->
                 libroId = c.libroId
@@ -82,7 +87,7 @@ class ChatViewModel(
                     _estado.update { it.copy(titulo = titulo) }
                 }
                 val contexto = buscador.buscar(texto, libroId)
-                val respuesta = tutor.responder(historial, texto, contexto)
+                val respuesta = tutor.responder(historial, texto, contexto, preferencias.actual().nivelAyuda)
                 val mensajeId = repositorio.guardarMensaje(conversacionId, RolMensaje.TUTOR, respuesta)
                 repositorio.guardarContexto(mensajeId, contexto)
             } finally {
@@ -98,6 +103,7 @@ class ChatViewModel(
             narrador.detener()
             _estado.update { it.copy(leyendoId = null) }
         } else {
+            narrador.velocidad = preferencias.actual().velocidadVoz.factor
             narrador.leer(mensaje.id, mensaje.texto)
             _estado.update { it.copy(leyendoId = mensaje.id) }
         }
@@ -114,7 +120,7 @@ class ChatViewModel(
             initializer {
                 val app = this[APPLICATION_KEY] as YachayApplication
                 val id = createSavedStateHandle().get<Long>(ARG_CONVERSACION) ?: error("Falta $ARG_CONVERSACION")
-                with(app.container) { ChatViewModel(id, chatRepository, libroRepository, buscadorFragmentos, tutor, glosario, narrador) }
+                with(app.container) { ChatViewModel(id, chatRepository, libroRepository, buscadorFragmentos, tutor, glosario, narrador, preferencias) }
             }
         }
     }
