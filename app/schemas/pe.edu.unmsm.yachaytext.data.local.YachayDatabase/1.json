@@ -1,0 +1,324 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "cc44615eb552f7f4c7a64fbe97962586",
+    "entities": [
+      {
+        "tableName": "libro",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id_libro` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `titulo` TEXT NOT NULL, `area_curso` TEXT NOT NULL, `num_paginas` INTEGER NOT NULL, `fecha_ingesta` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id_libro",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "titulo",
+            "columnName": "titulo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "areaCurso",
+            "columnName": "area_curso",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "numPaginas",
+            "columnName": "num_paginas",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fechaIngesta",
+            "columnName": "fecha_ingesta",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id_libro"
+          ]
+        }
+      },
+      {
+        "tableName": "fragmento",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id_fragmento` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `id_libro` INTEGER NOT NULL, `nro_pagina` INTEGER NOT NULL, `orden` INTEGER NOT NULL, `texto` TEXT NOT NULL, `embedding` BLOB NOT NULL, FOREIGN KEY(`id_libro`) REFERENCES `libro`(`id_libro`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id_fragmento",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "libroId",
+            "columnName": "id_libro",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nroPagina",
+            "columnName": "nro_pagina",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "orden",
+            "columnName": "orden",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "texto",
+            "columnName": "texto",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "embedding",
+            "columnName": "embedding",
+            "affinity": "BLOB",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id_fragmento"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_fragmento_id_libro",
+            "unique": false,
+            "columnNames": [
+              "id_libro"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_fragmento_id_libro` ON `${TABLE_NAME}` (`id_libro`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "libro",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "id_libro"
+            ],
+            "referencedColumns": [
+              "id_libro"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "conversacion",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id_conversacion` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `id_libro` INTEGER, `titulo` TEXT NOT NULL, `fecha_inicio` INTEGER NOT NULL, FOREIGN KEY(`id_libro`) REFERENCES `libro`(`id_libro`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id_conversacion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "libroId",
+            "columnName": "id_libro",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "titulo",
+            "columnName": "titulo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fechaInicio",
+            "columnName": "fecha_inicio",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id_conversacion"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_conversacion_id_libro",
+            "unique": false,
+            "columnNames": [
+              "id_libro"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_conversacion_id_libro` ON `${TABLE_NAME}` (`id_libro`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "libro",
+            "onDelete": "SET NULL",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "id_libro"
+            ],
+            "referencedColumns": [
+              "id_libro"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "mensaje",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id_mensaje` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `id_conversacion` INTEGER NOT NULL, `rol` TEXT NOT NULL, `contenido` TEXT NOT NULL, `por_voz` INTEGER NOT NULL, `fecha_hora` INTEGER NOT NULL, FOREIGN KEY(`id_conversacion`) REFERENCES `conversacion`(`id_conversacion`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id_mensaje",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "conversacionId",
+            "columnName": "id_conversacion",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rol",
+            "columnName": "rol",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "contenido",
+            "columnName": "contenido",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "porVoz",
+            "columnName": "por_voz",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fechaHora",
+            "columnName": "fecha_hora",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id_mensaje"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_mensaje_id_conversacion",
+            "unique": false,
+            "columnNames": [
+              "id_conversacion"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_mensaje_id_conversacion` ON `${TABLE_NAME}` (`id_conversacion`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "conversacion",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "id_conversacion"
+            ],
+            "referencedColumns": [
+              "id_conversacion"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "contexto_recuperado",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id_mensaje` INTEGER NOT NULL, `id_fragmento` INTEGER NOT NULL, `puntaje_coseno` REAL NOT NULL, PRIMARY KEY(`id_mensaje`, `id_fragmento`), FOREIGN KEY(`id_mensaje`) REFERENCES `mensaje`(`id_mensaje`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`id_fragmento`) REFERENCES `fragmento`(`id_fragmento`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "mensajeId",
+            "columnName": "id_mensaje",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fragmentoId",
+            "columnName": "id_fragmento",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "puntajeCoseno",
+            "columnName": "puntaje_coseno",
+            "affinity": "REAL",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id_mensaje",
+            "id_fragmento"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_contexto_recuperado_id_fragmento",
+            "unique": false,
+            "columnNames": [
+              "id_fragmento"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_contexto_recuperado_id_fragmento` ON `${TABLE_NAME}` (`id_fragmento`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "mensaje",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "id_mensaje"
+            ],
+            "referencedColumns": [
+              "id_mensaje"
+            ]
+          },
+          {
+            "table": "fragmento",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "id_fragmento"
+            ],
+            "referencedColumns": [
+              "id_fragmento"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'cc44615eb552f7f4c7a64fbe97962586')"
+    ]
+  }
+}

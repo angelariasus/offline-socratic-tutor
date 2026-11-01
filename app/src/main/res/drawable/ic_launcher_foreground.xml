@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ícono provisional: libro abierto. Reemplazar por el logo final. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,40C48,35 40,34 32,35L32,70C40,69 48,70 54,75C60,70 68,69 76,70L76,35C68,34 60,35 54,40ZM52,70.5C47,67.5 41,66.5 35,67L35,38C41,37.5 47,38.5 52,42ZM73,67C67,66.5 61,67.5 56,70.5L56,42C61,38.5 67,37.5 73,38Z" />
+</vector>

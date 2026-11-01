@@ -1,0 +1,15 @@
+*.iml
+.gradle/
+/local.properties
+/.idea/
+.DS_Store
+build/
+/captures
+.externalNativeBuild
+.cxx
+.kotlin/
+# Modelos de IA (pesan cientos de MB): no se versionan
+*.tflite
+*.task
+*.litertlm
+*.bin
