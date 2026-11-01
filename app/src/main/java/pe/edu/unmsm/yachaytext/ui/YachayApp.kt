@@ -31,8 +31,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import pe.edu.unmsm.yachaytext.ui.biblioteca.BibliotecaRoute
 import pe.edu.unmsm.yachaytext.ui.chat.ChatRoute
 import pe.edu.unmsm.yachaytext.ui.chat.ChatViewModel
+import pe.edu.unmsm.yachaytext.ui.escaneo.EscaneoPendienteScreen
+import pe.edu.unmsm.yachaytext.ui.inicio.InicioRoute
 import pe.edu.unmsm.yachaytext.ui.theme.Mist
 import pe.edu.unmsm.yachaytext.ui.theme.Paper
 import pe.edu.unmsm.yachaytext.ui.tutor.TutorRoute
@@ -45,6 +48,7 @@ enum class TopLevelDestination(val route: String, val label: String, val icon: I
     Ajustes("ajustes", "Ajustes", Icons.Outlined.Settings),
 }
 
+private const val RUTA_ESCANEO = "escaneo"
 private const val RUTA_CHAT = "chat/{${ChatViewModel.ARG_CONVERSACION}}"
 private fun rutaChat(id: Long) = "chat/$id"
 
@@ -64,8 +68,13 @@ fun YachayApp(navController: NavHostController = rememberNavController()) {
             startDestination = TopLevelDestination.Inicio.route,
             modifier = Modifier.padding(padding),
         ) {
-            composable(TopLevelDestination.Inicio.route) { PlaceholderScreen("Inicio") }
-            composable(TopLevelDestination.Biblioteca.route) { PlaceholderScreen("Biblioteca") }
+            composable(TopLevelDestination.Inicio.route) {
+                InicioRoute(onAbrirChat = { navController.navigate(rutaChat(it)) }, onEscanear = { navController.navigate(RUTA_ESCANEO) })
+            }
+            composable(TopLevelDestination.Biblioteca.route) {
+                BibliotecaRoute(onEscanear = { navController.navigate(RUTA_ESCANEO) }, onAbrirChat = { navController.navigate(rutaChat(it)) })
+            }
+            composable(RUTA_ESCANEO) { EscaneoPendienteScreen(onVolver = { navController.popBackStack() }) }
             composable(TopLevelDestination.Tutor.route) {
                 TutorRoute(onAbrirChat = { navController.navigate(rutaChat(it)) })
             }

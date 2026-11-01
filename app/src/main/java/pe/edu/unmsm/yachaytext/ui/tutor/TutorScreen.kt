@@ -45,32 +45,28 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import pe.edu.unmsm.yachaytext.YachayApplication
 import pe.edu.unmsm.yachaytext.data.ChatRepository
-import pe.edu.unmsm.yachaytext.domain.tutor.Tutor
+import pe.edu.unmsm.yachaytext.domain.tutor.IniciarConsulta
 import pe.edu.unmsm.yachaytext.ui.theme.Line
 import pe.edu.unmsm.yachaytext.ui.theme.Paper
 import pe.edu.unmsm.yachaytext.ui.theme.TextSecondary
 
 data class ConversacionResumen(val id: Long, val titulo: String)
 
-class TutorViewModel(private val repositorio: ChatRepository, private val tutor: Tutor) : ViewModel() {
+class TutorViewModel(repositorio: ChatRepository, private val iniciarConsulta: IniciarConsulta) : ViewModel() {
 
     val conversaciones: StateFlow<List<ConversacionResumen>> = repositorio.observarConversaciones()
         .map { lista -> lista.map { ConversacionResumen(it.id, it.titulo) } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     fun nuevaConsulta(alCrear: (Long) -> Unit) {
-        viewModelScope.launch {
-            // Mientras no exista la ingesta de libros, la consulta usa el pasaje de ejemplo del tutor demo.
-            val tema = "La fotosíntesis"
-            alCrear(repositorio.crearConversacion(tema, tutor.saludo(tema)))
-        }
+        viewModelScope.launch { alCrear(iniciarConsulta()) }
     }
 
     companion object {
         val Factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as YachayApplication
-                TutorViewModel(app.container.chatRepository, app.container.tutor)
+                TutorViewModel(app.container.chatRepository, app.container.iniciarConsulta)
             }
         }
     }
