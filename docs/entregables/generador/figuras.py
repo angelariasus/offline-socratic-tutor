@@ -119,4 +119,6 @@ mosaico([("Inicio", "inicio_con_datos"), ("Biblioteca filtrada por área", "bibl
 # ---------- Figura 3.11: escaneo y revisión ----------
 mosaico([("Escaneo con marco guía", "escaneo_camara"), ("Revisión del texto", "revision_libro_nuevo"), ("Página guardada", "revision_listo")],
         "fig3_11_escaneo.png")
+# ---------- Figura 3.12: respuesta con contexto (RAG) ----------
+mosaico([("Respuesta con la fuente citada", "flujo_rag")], "fig3_12_rag.png")
 print("ok")
