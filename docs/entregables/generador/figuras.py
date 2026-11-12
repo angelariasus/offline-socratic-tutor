@@ -96,8 +96,8 @@ img.save(OUT_DIR + "/fig3_8_navegacion.png", optimize=True)
 import os
 SHOTS = os.path.normpath(os.path.join(OUT_DIR, "..", "..", "..", "app", "screenshots"))
 def mosaico(capturas, salida):
-    """Une capturas de Roborazzi lado a lado con su etiqueta debajo."""
-    ims = [Image.open(f"{SHOTS}/{n}.png").convert("RGB") for _, n in capturas]
+    """Une capturas lado a lado con su etiqueta debajo. Un nombre sin ruta es una captura de Roborazzi."""
+    ims = [Image.open(n if "/" in n else f"{SHOTS}/{n}.png").convert("RGB") for _, n in capturas]
     GAP, LBL = 48, 56
     lienzo = Image.new("RGB", (sum(i.width for i in ims) + GAP * (len(ims) - 1) + 2, max(i.height for i in ims) + LBL), "white")
     d = ImageDraw.Draw(lienzo)
@@ -124,4 +124,7 @@ mosaico([("Respuesta con la fuente citada", "flujo_rag")], "fig3_12_rag.png")
 # ---------- Figura 3.13: Ajustes y bienvenida ----------
 mosaico([("Ajustes", "ajustes"), ("Texto muy grande", "ajustes_texto_muy_grande"), ("Bienvenida", "bienvenida_completa")],
         "fig3_13_ajustes.png")
+# ---------- Figura 3.14: identidad visual (antes y después) ----------
+mosaico([("Antes (Sprint 2)", f"{OUT_DIR}/antes_inicio.png"), ("Después", "inicio_con_datos"), ("Logo en la bienvenida", "bienvenida_completa")],
+        "fig3_14_identidad.png")
 print("ok")

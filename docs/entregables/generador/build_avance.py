@@ -188,7 +188,7 @@ B.append(figure(f'{IMG_DIR}/fig3_8_navegacion.png', 6.2, 102))
 B.append(note('Elaboración propia. Las flechas indican las transiciones entre pantallas; las cuatro pestañas de la barra inferior son accesibles desde cualquier pantalla principal.'))
 
 B.append(heading('Lineamientos visuales'))
-B.append(para('Se conserva el estilo monocromo del prototipo, con tres ajustes de accesibilidad. Primero, el gris de los textos secundarios se oscurece a #5F5F5F, que sobre fondo blanco alcanza una relación de contraste de 6,4:1, por encima del mínimo de 4,5:1 que exige el nivel AA de las WCAG 2.1 (World Wide Web Consortium [W3C], 2018). Segundo, el texto principal pasa a 18 sp, pensando en estudiantes con dificultades de fluidez lectora. Tercero, se reserva un color de acento (#8A4B08, contraste 6,8:1) exclusivamente para resaltar los términos en quechua. La tipografía es la del sistema, porque las fuentes descargables requieren conexión a internet.'))
+B.append(para('Se conserva el estilo monocromo del prototipo, con tres ajustes de accesibilidad. Primero, el gris de los textos secundarios se oscurece a #5F5F5F, que sobre fondo blanco alcanza una relación de contraste de 6,4:1, por encima del mínimo de 4,5:1 que exige el nivel AA de las WCAG 2.1 (World Wide Web Consortium [W3C], 2018). Segundo, el texto principal pasa a 18 sp, pensando en estudiantes con dificultades de fluidez lectora. Tercero, se reserva un color de acento (#8A4B08, contraste 6,8:1) exclusivamente para resaltar los términos en quechua. La tipografía es la del sistema, porque las fuentes descargables requieren conexión a internet. Al inicio del Sprint 3, este estilo se reemplazó por una identidad visual propia, que se describe en el apartado «Identidad visual».'))
 
 # 3.1.4 ---------------------------------------------------------------
 B.append(heading('3.1.4 Implementación'))
@@ -293,6 +293,24 @@ B.append(caption('Figura 3.13', 'Pantallas de Ajustes y de bienvenida'))
 B.append(figure(f'{IMG_DIR}/fig3_13_ajustes.png', 6.2, 107))
 B.append(note('Elaboración propia. Capturas generadas con Roborazzi. La segunda muestra los Ajustes con el tamaño de texto «muy grande».'))
 
+B.append(heading('Identidad visual'))
+B.append(para('Las pantallas del Sprint 2 conservaban el estilo monocromo del prototipo, que funcionaba como boceto pero resultaba frío para estudiantes de primaria y no tenía elementos reconocibles. Al inicio del Sprint 3 se definió una identidad visual con tres decisiones. Primero, una paleta inspirada en el paisaje andino: el verde de los andenes para las acciones principales y la selección, el amarillo del sol solo como decoración, un fondo de tono papel y un tono tierra reservado para los términos en quechua, de modo que no se confundan con las acciones (Tabla 3.16). Todos los pares de texto y fondo superan la relación de contraste de 4,5:1 del nivel AA de las WCAG 2.1 (W3C, 2018).'))
+B.append(para('Segundo, la tipografía Lexend, diseñada con el propósito de facilitar la lectura (Lexend, s. f.) y distribuida bajo la licencia SIL Open Font License. Se empaqueta dentro del APK en tres pesos (unos 230 KB en total), porque las fuentes descargables requieren conexión a internet (RNF01). Tercero, un logo que representa un libro abierto con el sol saliendo detrás, en referencia a «yachay» (saber, aprender); el mismo dibujo se usa como ícono adaptativo de la aplicación, con una versión monocroma para los íconos temáticos de Android, y en la pantalla de bienvenida. La portada de Inicio muestra un paisaje con sol, cerros y andenes que se dibuja con código, por lo que no añade imágenes al APK y se adapta a cualquier ancho de pantalla (Figura 3.14).'))
+B.append(caption('Tabla 3.16', 'Paleta de colores de la aplicación'))
+B.append(table([2000, 1300, 3860, 2200], ['Color', 'Código', 'Uso', 'Contraste'], [
+    ['Verde andén', '#1E6B52', 'Botones principales, chips y pestaña seleccionados, logo.', '6,4:1 con texto blanco'],
+    ['Verde suave', '#E1F0E8', 'Fondo de íconos de libros y estados vacíos.', '5,4:1 con verde andén'],
+    ['Sol', '#F2B544', 'Solo decorativo (sol del logo y de la portada); nunca lleva texto.', '—'],
+    ['Papel', '#FAF7F2', 'Fondo de las pantallas; las tarjetas son blancas.', '15,7:1 con el texto principal'],
+    ['Tinta', '#1F1D1A', 'Texto principal e íconos.', '15,7:1 sobre papel'],
+    ['Gris cálido', '#5C574F', 'Texto secundario (fechas, descripciones).', '6,7:1 sobre papel'],
+    ['Tierra', '#8A4B08', 'Términos en quechua, sobre fondo #FFF1E0.', '6,1:1'],
+]))
+B.append(note('Elaboración propia. Contrastes calculados con la fórmula de luminancia relativa de las WCAG 2.1.'))
+B.append(caption('Figura 3.14', 'Pantalla de Inicio antes y después de la identidad visual'))
+B.append(figure(f'{IMG_DIR}/fig3_14_identidad.png', 6.2, 108))
+B.append(note('Elaboración propia. Capturas generadas con Roborazzi. Las demás figuras de este documento ya muestran la identidad visual.'))
+
 B.append(heading('Verificación en emulador'))
 B.append(para('Además de las pruebas en la JVM, el flujo se verificó en un emulador con el perfil del Samsung Galaxy A05 (Android 13, 2 GB de RAM), con el Wi-Fi y los datos móviles desactivados. Una prueba instrumentada dibuja una página con texto en castellano y confirma que ML Kit la lee sin conexión. La prueba manual de la cámara reveló dos problemas que se corrigieron. Primero, la vista previa podía quedar en negro porque PreviewView usa por defecto un SurfaceView, que se dibuja detrás de la ventana y queda tapado por el fondo de la pantalla; se cambió al modo compatible (TextureView). Segundo, la cámara virtual del emulador entrega fotogramas con marcas de tiempo inválidas y la captura nunca termina; aunque es un defecto del emulador, evidenció que la pantalla no daba respuesta al tocar el disparador, por lo que se añadió el mensaje «Tomando la foto…» y el tiempo máximo de la Tabla 3.14. Con la cámara emulada estándar el flujo completo funcionó: captura, OCR y aviso de texto no encontrado. Queda pendiente la prueba con una página real en un dispositivo físico.'))
 
@@ -326,6 +344,7 @@ B.append(note('Elaboración propia.'))
 # Referencias ----------------------------------------------------------
 B.append(heading('Referencias'))
 B.append(reference('Android Developers. (s. f.). *Save data in a local database using Room*. Recuperado el 31 de octubre de 2026, de https://developer.android.com/training/data-storage/room'))
+B.append(reference('Lexend. (s. f.). *Lexend: A variable font designed to improve reading proficiency*. Recuperado el 11 de noviembre de 2026, de https://www.lexend.com/'))
 B.append(reference('Menju, T. (s. f.). *Roborazzi* [Software]. GitHub. Recuperado el 31 de octubre de 2026, de https://github.com/takahirom/roborazzi'))
 B.append(reference('Robolectric. (s. f.). *Robolectric*. Recuperado el 31 de octubre de 2026, de https://robolectric.org/'))
 B.append(reference('World Wide Web Consortium. (2018). *Web Content Accessibility Guidelines (WCAG) 2.1*. https://www.w3.org/TR/WCAG21/'))
