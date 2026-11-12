@@ -68,6 +68,7 @@ import pe.edu.unmsm.yachaytext.data.PreferenciasRepository
 import pe.edu.unmsm.yachaytext.domain.tutor.IniciarConsulta
 import pe.edu.unmsm.yachaytext.ui.biblioteca.LibroUi
 import pe.edu.unmsm.yachaytext.ui.common.ConversacionResumen
+import pe.edu.unmsm.yachaytext.ui.common.GrupoConversaciones
 import pe.edu.unmsm.yachaytext.ui.common.EstadoVacio
 import pe.edu.unmsm.yachaytext.ui.common.PortadaLibro
 import pe.edu.unmsm.yachaytext.ui.common.TarjetaPortada
@@ -205,21 +206,7 @@ private fun LazyListScope.conversaciones(estado: InicioUiState, acciones: Accion
     if (destacada == null) return
     item { TituloSeccion("Continúa donde te quedaste", Modifier.margen().padding(top = 20.dp, bottom = 8.dp)) }
     item { TarjetaContinuar(destacada, ahora, { acciones.onAbrirChat(destacada.id) }, Modifier.margen()) }
-    if (resto.isNotEmpty()) item { GrupoConversaciones(resto, acciones, ahora) }
-}
-
-/** Las conversaciones que no son la destacada, agrupadas en un solo bloque: una lista secundaria. */
-@Composable
-private fun GrupoConversaciones(resto: List<ConversacionResumen>, acciones: AccionesInicio, ahora: Long) {
-    if (resto.isEmpty()) return
-    Surface(color = Paper, shape = RoundedCornerShape(20.dp), modifier = Modifier.margen().padding(top = 12.dp).fillMaxWidth()) {
-        Column {
-            resto.forEachIndexed { i, c ->
-                if (i > 0) HorizontalDivider(Modifier.padding(start = 72.dp), color = Linen, thickness = 2.dp)
-                FilaConversacion(c, ahora) { acciones.onAbrirChat(c.id) }
-            }
-        }
-    }
+    if (resto.isNotEmpty()) item { GrupoConversaciones(resto, ahora, acciones.onAbrirChat, Modifier.margen().padding(top = 12.dp)) }
 }
 
 @Composable
@@ -251,7 +238,7 @@ private fun ColumnaConversaciones(estado: InicioUiState, acciones: AccionesInici
     val destacada = estado.conversaciones.firstOrNull() ?: return
     TituloSeccion("Continúa donde te quedaste", Modifier.margen().padding(top = 20.dp, bottom = 8.dp))
     TarjetaContinuar(destacada, ahora, { acciones.onAbrirChat(destacada.id) }, Modifier.margen())
-    GrupoConversaciones(estado.conversaciones.drop(1), acciones, ahora)
+    GrupoConversaciones(estado.conversaciones.drop(1), ahora, acciones.onAbrirChat, Modifier.margen().padding(top = 12.dp))
 }
 
 @Composable
@@ -338,27 +325,6 @@ private fun TarjetaContinuar(c: ConversacionResumen, ahora: Long, onClick: () ->
             Box(Modifier.size(44.dp).clip(CircleShape).background(Brand), contentAlignment = Alignment.Center) {
                 Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Paper)
             }
-        }
-    }
-}
-
-@Composable
-private fun FilaConversacion(c: ConversacionResumen, ahora: Long, onClick: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onClick).padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        val color = c.area?.let(::colorArea)
-        Box(
-            Modifier.size(40.dp).clip(CircleShape).background(color?.fondo ?: BrandSoft),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(c.area?.let(::iconoArea) ?: Icons.Outlined.Forum, contentDescription = null, tint = color?.tinta ?: Brand, modifier = Modifier.size(20.dp))
-        }
-        Spacer(Modifier.width(16.dp))
-        Column(Modifier.weight(1f)) {
-            Text(c.titulo, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(c.detalle(ahora), style = MaterialTheme.typography.labelMedium, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }

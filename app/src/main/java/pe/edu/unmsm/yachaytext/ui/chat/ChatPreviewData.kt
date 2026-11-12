@@ -29,6 +29,7 @@ object ChatPreviewData {
     val conversacion = ChatUiState(
         titulo = "La fotosíntesis",
         subtitulo = "Ciencia y Tecnología 5",
+        area = "Ciencia y Tecnología",
         mensajes = mensajes,
         leyendoId = 9,
     )

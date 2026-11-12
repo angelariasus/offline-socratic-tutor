@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
@@ -58,7 +57,10 @@ import pe.edu.unmsm.yachaytext.ui.common.BotonPrincipal
 import pe.edu.unmsm.yachaytext.ui.common.ConversacionResumen
 import pe.edu.unmsm.yachaytext.ui.common.DialogoTexto
 import pe.edu.unmsm.yachaytext.ui.common.Opcion
-import pe.edu.unmsm.yachaytext.ui.common.TarjetaConversacion
+import pe.edu.unmsm.yachaytext.ui.common.EstadoVacio
+import pe.edu.unmsm.yachaytext.ui.common.GrupoConversaciones
+import pe.edu.unmsm.yachaytext.ui.common.agruparPorFecha
+import androidx.compose.material.icons.outlined.Forum
 import pe.edu.unmsm.yachaytext.ui.common.TituloSeccion
 import pe.edu.unmsm.yachaytext.ui.common.resumir
 import pe.edu.unmsm.yachaytext.ui.theme.Linen
@@ -144,35 +146,36 @@ fun TutorScreen(
         LazyColumn(
             modifier = Modifier.widthIn(max = 720.dp).fillMaxSize(),
             contentPadding = PaddingValues(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
                 Text("Tutor", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.semantics { heading() })
+                Text("Pregunta lo que quieras sobre tus libros.", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
                 Spacer(Modifier.height(20.dp))
                 BotonPrincipal("Nueva pregunta", acciones.onNueva, icono = Icons.Outlined.Add, alto = 64.dp, modifier = Modifier.fillMaxWidth())
-                Spacer(Modifier.height(8.dp))
-                TituloSeccion("Tus conversaciones")
             }
             if (conversaciones.isEmpty()) {
                 item {
-                    Text(
-                        "Aún no tienes conversaciones. Toca «Nueva pregunta» para empezar.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextSecondary,
+                    EstadoVacio(
+                        icono = Icons.Outlined.Forum,
+                        titulo = "Aún no tienes conversaciones",
+                        texto = "Haz tu primera pregunta y Yachay te ayudará a encontrar la respuesta en tus libros.",
+                        accion = null,
+                        onAccion = {},
+                        modifier = Modifier.padding(top = 24.dp),
                     )
                 }
             }
-            items(conversaciones, key = { it.id }) { c ->
-                TarjetaConversacion(
-                    c.titulo,
-                    c.detalle(ahora),
-                    onClick = { acciones.onAbrirChat(c.id) },
-                    area = c.area,
-                    opciones = listOf(
-                        Opcion("Cambiar nombre", Icons.Outlined.Edit) { renombrando = c.id },
-                        Opcion("Borrar", Icons.Outlined.Delete, destructiva = true) { acciones.onBorrar(c.id) },
-                    ),
-                )
+            // Bloques por fecha: dan ritmo a una lista que, si no, sería una columna uniforme.
+            agruparPorFecha(conversaciones, ahora).forEach { (grupo, lista) ->
+                item(key = grupo) {
+                    TituloSeccion(grupo, Modifier.padding(top = 24.dp, bottom = 8.dp))
+                    GrupoConversaciones(lista, ahora, acciones.onAbrirChat) { c ->
+                        listOf(
+                            Opcion("Cambiar nombre", Icons.Outlined.Edit) { renombrando = c.id },
+                            Opcion("Borrar", Icons.Outlined.Delete, destructiva = true) { acciones.onBorrar(c.id) },
+                        )
+                    }
+                }
             }
         }
         SnackbarHost(avisos, Modifier.align(Alignment.BottomCenter).padding(16.dp))

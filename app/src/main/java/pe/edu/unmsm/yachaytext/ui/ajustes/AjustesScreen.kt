@@ -1,6 +1,14 @@
 package pe.edu.unmsm.yachaytext.ui.ajustes
 
 import androidx.compose.foundation.background
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Translate
+import androidx.compose.material.icons.outlined.TextFields
+import androidx.compose.material.icons.outlined.RecordVoiceOver
+import androidx.compose.material.icons.outlined.School
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.draw.clip
+import pe.edu.unmsm.yachaytext.ui.theme.BrandSoft
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -155,13 +163,13 @@ fun AjustesScreen(estado: AjustesUiState, acciones: AccionesAjustes) {
         ) {
             Cabecera(estado.nombre, p.grado)
 
-            Seccion("Perfil") {
+            Seccion("Perfil", Icons.Outlined.Person) {
                 Subtitulo("Nombre")
                 CampoTexto(estado.nombre, acciones.onNombre, "Tu nombre", modifier = Modifier.fillMaxWidth())
                 SelectorGrado(p.grado, acciones.onGrado)
             }
 
-            Seccion("Quechua") {
+            Seccion("Quechua", Icons.Outlined.Translate) {
                 Subtitulo("Variante para las traducciones")
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     VarianteQuechua.entries.forEach { v ->
@@ -175,7 +183,7 @@ fun AjustesScreen(estado: AjustesUiState, acciones: AccionesAjustes) {
                 }
             }
 
-            Seccion("Presentación") {
+            Seccion("Presentación", Icons.Outlined.TextFields) {
                 Subtitulo("Tamaño de texto")
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TamanoTexto.entries.forEach { t -> ChipSeleccion(t.etiqueta, p.tamanoTexto == t, { acciones.onTamano(t) }) }
@@ -183,7 +191,7 @@ fun AjustesScreen(estado: AjustesUiState, acciones: AccionesAjustes) {
                 Text("Así se verá el texto en Yachay.", style = MaterialTheme.typography.bodyLarge)
             }
 
-            Seccion("Voz") {
+            Seccion("Voz", Icons.Outlined.RecordVoiceOver) {
                 Subtitulo("Velocidad de lectura")
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     VelocidadVoz.entries.forEach { v -> ChipSeleccion(v.etiqueta, p.velocidadVoz == v, { acciones.onVelocidad(v) }) }
@@ -191,7 +199,7 @@ fun AjustesScreen(estado: AjustesUiState, acciones: AccionesAjustes) {
                 BotonSecundario("Probar voz", acciones.onProbarVoz, icono = Icons.AutoMirrored.Outlined.VolumeUp)
             }
 
-            Seccion("Aprendizaje") {
+            Seccion("Aprendizaje", Icons.Outlined.School) {
                 Subtitulo("Nivel de ayuda del tutor")
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     NivelAyuda.entries.forEach { a -> ChipSeleccion(a.etiqueta, p.nivelAyuda == a, { acciones.onAyuda(a) }) }
@@ -199,7 +207,7 @@ fun AjustesScreen(estado: AjustesUiState, acciones: AccionesAjustes) {
                 Text(p.nivelAyuda.descripcion, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
             }
 
-            Seccion("Ayuda") {
+            Seccion("Ayuda", Icons.AutoMirrored.Outlined.HelpOutline) {
                 Text("Repasa los pasos para usar Yachay con tus libros.", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
                 BotonSecundario("Cómo usar Yachay", { ayuda = true }, icono = Icons.AutoMirrored.Outlined.HelpOutline)
             }
@@ -219,24 +227,34 @@ fun AjustesScreen(estado: AjustesUiState, acciones: AccionesAjustes) {
 
 @Composable
 private fun Cabecera(nombre: String, grado: String?) {
-    Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Surface(color = Brand, shape = CircleShape, modifier = Modifier.size(64.dp)) {
+    // Mismo bloque verde que la portada de Inicio: el perfil es el ancla de Ajustes.
+    Row(
+        Modifier.fillMaxWidth().padding(bottom = 8.dp).clip(RoundedCornerShape(28.dp)).background(Brand).padding(20.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Surface(color = Paper, shape = CircleShape, modifier = Modifier.size(64.dp)) {
             Box(contentAlignment = Alignment.Center) {
-                Text(nombre.trim().firstOrNull()?.uppercase() ?: "Y", style = MaterialTheme.typography.headlineSmall, color = Paper)
+                Text(nombre.trim().firstOrNull()?.uppercase() ?: "Y", style = MaterialTheme.typography.headlineSmall, color = Brand)
             }
         }
         Spacer(Modifier.width(16.dp))
         Column {
-            Text(nombre.trim().ifEmpty { "Ajustes" }, style = MaterialTheme.typography.headlineMedium)
-            Text(grado ?: "Elige tu grado abajo", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+            Text(nombre.trim().ifEmpty { "Ajustes" }, style = MaterialTheme.typography.headlineMedium, color = Paper, modifier = Modifier.semantics { heading() })
+            Text(grado ?: "Elige tu grado abajo", style = MaterialTheme.typography.bodyMedium, color = Paper.copy(alpha = 0.85f))
         }
     }
 }
 
 @Composable
-private fun Seccion(titulo: String, contenido: @Composable () -> Unit) {
-    Text(titulo, style = MaterialTheme.typography.titleMedium, color = TextSecondary, modifier = Modifier.padding(top = 8.dp).semantics { heading() })
-    Surface(color = Mist, shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
+private fun Seccion(titulo: String, icono: ImageVector, contenido: @Composable () -> Unit) {
+    Row(Modifier.padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.size(32.dp).clip(CircleShape).background(BrandSoft), contentAlignment = Alignment.Center) {
+            Icon(icono, contentDescription = null, tint = Brand, modifier = Modifier.size(18.dp))
+        }
+        Spacer(Modifier.width(10.dp))
+        Text(titulo, style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
+    }
+    Surface(color = Paper, shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) { contenido() }
     }
 }

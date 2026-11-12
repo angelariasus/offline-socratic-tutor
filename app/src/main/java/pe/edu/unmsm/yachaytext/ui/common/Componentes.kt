@@ -1,11 +1,10 @@
 package pe.edu.unmsm.yachaytext.ui.common
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,15 +13,11 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.outlined.Forum
 import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -48,7 +43,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import pe.edu.unmsm.yachaytext.ui.biblioteca.LibroUi
 import pe.edu.unmsm.yachaytext.ui.theme.Brand
 import pe.edu.unmsm.yachaytext.ui.theme.BrandSoft
 import pe.edu.unmsm.yachaytext.ui.theme.Ink
@@ -87,37 +81,7 @@ fun MenuOpciones(descripcion: String, opciones: List<Opcion>, tinte: Color = Tex
     }
 }
 
-/** Ícono del área sobre fondo verde suave: la «portada» del libro. */
-@Composable
-fun PortadaArea(area: String, tamano: Dp = 72.dp) {
-    Surface(color = BrandSoft, shape = RoundedCornerShape(14.dp), modifier = Modifier.size(tamano)) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(iconoArea(area), contentDescription = null, tint = Brand, modifier = Modifier.size(tamano * 0.45f))
-        }
-    }
-}
-
 fun textoPaginas(n: Int) = "$n ${if (n == 1) "página" else "páginas"}"
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-fun TarjetaLibro(libro: LibroUi, ahora: Long, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Surface(onClick = onClick, shape = RoundedCornerShape(20.dp), border = BorderStroke(1.dp, Line), color = Paper, modifier = modifier.fillMaxWidth()) {
-        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            PortadaArea(libro.area)
-            Spacer(Modifier.width(16.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(libro.titulo, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Text(libro.area, style = MaterialTheme.typography.labelMedium, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                // Los datos bajan de línea si la tarjeta es angosta (cuadrícula en tableta horizontal).
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Dato(Icons.Outlined.Description, textoPaginas(libro.paginas))
-                    Dato(Icons.Outlined.Schedule, tiempoRelativo(libro.fechaIngesta, ahora))
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun Dato(icono: ImageVector, texto: String) {
@@ -128,38 +92,9 @@ fun Dato(icono: ImageVector, texto: String) {
     }
 }
 
-/**
- * Conversación en Inicio y en la pestaña Tutor (mismo aspecto en ambas).
- * @param detalle libro y antigüedad, por ejemplo «Ciencia y Tecnología 5 · Hace 5 min».
- */
-@Composable
-fun TarjetaConversacion(
-    titulo: String,
-    detalle: String,
-    onClick: () -> Unit,
-    area: String? = null,
-    opciones: List<Opcion> = emptyList(),
-) {
-    Surface(onClick = onClick, shape = RoundedCornerShape(20.dp), border = BorderStroke(1.dp, Line), color = Paper, modifier = Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(start = 12.dp, top = 12.dp, bottom = 12.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Surface(color = BrandSoft, shape = CircleShape, modifier = Modifier.size(44.dp)) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(area?.let(::iconoArea) ?: Icons.Outlined.Forum, contentDescription = null, tint = Brand, modifier = Modifier.size(22.dp))
-                }
-            }
-            Spacer(Modifier.width(14.dp))
-            Column(Modifier.weight(1f).padding(end = 8.dp)) {
-                Text(titulo, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(detalle, style = MaterialTheme.typography.labelMedium, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
-            if (opciones.isNotEmpty()) MenuOpciones("Opciones de «$titulo»", opciones) else Spacer(Modifier.width(8.dp))
-        }
-    }
-}
-
 /** Estado vacío con ícono, explicación y una acción principal. */
 @Composable
-fun EstadoVacio(icono: ImageVector, titulo: String, texto: String, accion: String, onAccion: () -> Unit, modifier: Modifier = Modifier) {
+fun EstadoVacio(icono: ImageVector, titulo: String, texto: String, accion: String?, onAccion: () -> Unit, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxWidth().padding(vertical = 32.dp, horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Surface(color = BrandSoft, shape = RoundedCornerShape(28.dp), modifier = Modifier.size(96.dp)) {
             Box(contentAlignment = Alignment.Center) { Icon(icono, contentDescription = null, tint = Brand, modifier = Modifier.size(44.dp)) }
@@ -168,8 +103,11 @@ fun EstadoVacio(icono: ImageVector, titulo: String, texto: String, accion: Strin
         Text(titulo, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
         Spacer(Modifier.height(8.dp))
         Text(texto, style = MaterialTheme.typography.bodyMedium, color = TextSecondary, textAlign = TextAlign.Center)
-        Spacer(Modifier.height(20.dp))
-        BotonPrincipal(accion, onAccion)
+        // Sin botón propio cuando la pantalla ya muestra la misma acción (evita duplicarla).
+        if (accion != null) {
+            Spacer(Modifier.height(20.dp))
+            BotonPrincipal(accion, onAccion)
+        }
     }
 }
 
@@ -184,7 +122,15 @@ fun BotonPrincipal(
 ) {
     val fondo = if (habilitado) Brand else Line
     val contenido = if (habilitado) Paper else TextDisabled
-    Surface(onClick = onClick, enabled = habilitado, shape = RoundedCornerShape(50), color = fondo, modifier = modifier.height(alto)) {
+    val interaccion = remember { MutableInteractionSource() }
+    Surface(
+        onClick = onClick,
+        enabled = habilitado,
+        shape = RoundedCornerShape(50),
+        color = fondo,
+        interactionSource = interaccion,
+        modifier = modifier.height(alto).encogerAlPresionar(interaccion),
+    ) {
         Row(Modifier.padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
             if (icono != null) {
                 Icon(icono, contentDescription = null, tint = contenido)
@@ -195,27 +141,37 @@ fun BotonPrincipal(
     }
 }
 
+/** Acción secundaria: tonal (verde suave), sin borde, para no competir con la principal. */
 @Composable
 fun BotonSecundario(texto: String, onClick: () -> Unit, icono: ImageVector? = null, modifier: Modifier = Modifier) {
-    Surface(onClick = onClick, shape = RoundedCornerShape(50), color = Paper, border = BorderStroke(1.dp, Line), modifier = modifier.height(56.dp)) {
+    val interaccion = remember { MutableInteractionSource() }
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(50),
+        color = BrandSoft,
+        interactionSource = interaccion,
+        modifier = modifier.height(56.dp).encogerAlPresionar(interaccion),
+    ) {
         Row(Modifier.padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
             if (icono != null) {
-                Icon(icono, contentDescription = null, tint = Ink)
+                Icon(icono, contentDescription = null, tint = Brand)
                 Spacer(Modifier.width(10.dp))
             }
-            Text(texto, style = MaterialTheme.typography.labelLarge, color = Ink)
+            Text(texto, style = MaterialTheme.typography.labelLarge, color = Brand)
         }
     }
 }
 
 @Composable
 fun ChipSeleccion(texto: String, activo: Boolean, onClick: () -> Unit, icono: ImageVector? = null) {
+    val interaccion = remember { MutableInteractionSource() }
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(50),
         color = if (activo) Brand else Paper,
         border = if (activo) null else BorderStroke(1.dp, Line),
-        modifier = Modifier.height(44.dp),
+        interactionSource = interaccion,
+        modifier = Modifier.height(44.dp).encogerAlPresionar(interaccion),
     ) {
         Row(Modifier.padding(horizontal = 18.dp), verticalAlignment = Alignment.CenterVertically) {
             if (icono != null) {

@@ -95,7 +95,7 @@ fun BienvenidaScreen(
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(24.dp))
-            Surface(color = Paper, shape = RoundedCornerShape(20.dp), border = BorderStroke(1.dp, Line), modifier = Modifier.fillMaxWidth()) {
+            Surface(color = Paper, shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
                 PasosYachay(Modifier.padding(20.dp))
             }
             Spacer(Modifier.height(24.dp))

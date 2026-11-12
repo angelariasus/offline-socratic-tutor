@@ -34,6 +34,8 @@ enum class Atajo(val etiqueta: String, val consulta: String) {
 data class ChatUiState(
     val titulo: String = "",
     val subtitulo: String? = null,
+    /** Área del libro de la conversación, para mostrar su portada. */
+    val area: String? = null,
     val mensajes: List<MensajeUi> = emptyList(),
     val entrada: String = "",
     val pensando: Boolean = false,

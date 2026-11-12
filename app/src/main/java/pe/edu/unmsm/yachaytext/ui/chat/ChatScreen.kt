@@ -72,6 +72,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import pe.edu.unmsm.yachaytext.ui.common.PortadaLibro
+import pe.edu.unmsm.yachaytext.ui.common.movimientoReducido
+import pe.edu.unmsm.yachaytext.ui.theme.BrandSoft
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -128,6 +134,7 @@ fun ChatScreen(
     onCerrarFuente: () -> Unit = {},
 ) {
     val lista = rememberLazyListState()
+    val reducido = movimientoReducido()
     val foco = remember { FocusRequester() }
     LaunchedEffect(estado.sinPreguntas, estado.mensajes.isNotEmpty()) {
         if (estado.sinPreguntas && estado.mensajes.isNotEmpty()) runCatching { foco.requestFocus() }
@@ -145,7 +152,7 @@ fun ChatScreen(
         contentAlignment = Alignment.TopCenter,
     ) {
         Column(Modifier.widthIn(max = AnchoMaximo).fillMaxSize()) {
-            BarraSuperior(estado.titulo, estado.subtitulo, onVolver)
+            BarraSuperior(estado.titulo, estado.subtitulo, estado.area, onVolver)
             LazyColumn(
                 state = lista,
                 modifier = Modifier.weight(1f).fillMaxWidth(),
@@ -153,6 +160,7 @@ fun ChatScreen(
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
                 items(estado.mensajes, key = { it.id }) { mensaje ->
+                    Box(if (reducido) Modifier else Modifier.animateItem(fadeInSpec = tween(220), placementSpec = spring(stiffness = Spring.StiffnessMediumLow), fadeOutSpec = null)) {
                     if (mensaje.rol == RolMensaje.TUTOR) {
                         MensajeTutor(
                             mensaje,
@@ -163,6 +171,7 @@ fun ChatScreen(
                         )
                     } else {
                         MensajeEstudiante(mensaje)
+                    }
                     }
                 }
                 if (estado.pensando) item(key = "pensando") { Pensando() }
@@ -187,7 +196,7 @@ fun ChatScreen(
 }
 
 @Composable
-private fun BarraSuperior(titulo: String, subtitulo: String?, onVolver: () -> Unit) {
+private fun BarraSuperior(titulo: String, subtitulo: String?, area: String?, onVolver: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().padding(start = 4.dp, end = 20.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -195,8 +204,12 @@ private fun BarraSuperior(titulo: String, subtitulo: String?, onVolver: () -> Un
         IconButton(onClick = onVolver) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
         }
+        if (area != null) {
+            PortadaLibro(area, Modifier.width(34.dp))
+            Spacer(Modifier.width(12.dp))
+        }
         Column {
-            Text(titulo, style = MaterialTheme.typography.titleLarge, maxLines = 1)
+            Text(titulo, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (subtitulo != null) {
                 Text(subtitulo, style = MaterialTheme.typography.labelMedium, color = TextSecondary, maxLines = 1)
             }
@@ -267,7 +280,7 @@ private fun textoResaltado(mensaje: MensajeUi) = buildAnnotatedString {
 @Composable
 private fun MensajeEstudiante(mensaje: MensajeUi) {
     Row(Modifier.fillMaxWidth().padding(start = 64.dp), horizontalArrangement = Arrangement.End) {
-        Surface(color = Mist, shape = RoundedCornerShape(22.dp)) {
+        Surface(color = BrandSoft, shape = RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp, bottomStart = 22.dp, bottomEnd = 6.dp)) {
             Column(Modifier.padding(horizontal = 18.dp, vertical = 12.dp)) {
                 if (mensaje.porVoz) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -339,8 +352,8 @@ private fun Compositor(
     Surface(
         modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp, top = 4.dp),
         shape = RoundedCornerShape(28.dp),
-        border = BorderStroke(1.dp, Line),
         color = Paper,
+        shadowElevation = 4.dp,
     ) {
         Column(Modifier.padding(start = 20.dp, end = 12.dp, top = 16.dp, bottom = 12.dp)) {
             if (estado.grabando) {

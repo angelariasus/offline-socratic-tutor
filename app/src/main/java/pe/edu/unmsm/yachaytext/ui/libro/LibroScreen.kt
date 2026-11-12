@@ -1,6 +1,5 @@
 package pe.edu.unmsm.yachaytext.ui.libro
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -78,11 +77,17 @@ import pe.edu.unmsm.yachaytext.ui.common.DialogoTexto
 import pe.edu.unmsm.yachaytext.ui.common.EstadoVacio
 import pe.edu.unmsm.yachaytext.ui.common.MenuOpciones
 import pe.edu.unmsm.yachaytext.ui.common.Opcion
-import pe.edu.unmsm.yachaytext.ui.common.PortadaArea
+import pe.edu.unmsm.yachaytext.ui.common.ColorArea
+import pe.edu.unmsm.yachaytext.ui.common.PortadaLibro
+import pe.edu.unmsm.yachaytext.ui.common.colorArea
+import pe.edu.unmsm.yachaytext.ui.common.encogerAlPresionar
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.remember
+import androidx.compose.ui.draw.clip
 import pe.edu.unmsm.yachaytext.ui.common.TituloSeccion
 import pe.edu.unmsm.yachaytext.ui.common.textoPaginas
 import pe.edu.unmsm.yachaytext.ui.common.tiempoRelativo
-import pe.edu.unmsm.yachaytext.ui.theme.Line
 import pe.edu.unmsm.yachaytext.ui.theme.Linen
 import pe.edu.unmsm.yachaytext.ui.theme.Paper
 import pe.edu.unmsm.yachaytext.ui.theme.TextSecondary
@@ -222,7 +227,7 @@ fun LibroScreen(estado: LibroDetalleUiState, acciones: AccionesLibro, ahora: Lon
                         )
                     }
                 }
-                items(estado.paginas, key = { it.numero }) { p -> TarjetaPagina(p) { paginaAbierta = p.numero } }
+                items(estado.paginas, key = { it.numero }) { p -> TarjetaPagina(p, colorArea(libro.area)) { paginaAbierta = p.numero } }
             }
         }
     }
@@ -258,17 +263,21 @@ fun LibroScreen(estado: LibroDetalleUiState, acciones: AccionesLibro, ahora: Lon
 
 @Composable
 private fun Cabecera(libro: LibroUi, ahora: Long, acciones: AccionesLibro) {
+    val color = colorArea(libro.area)
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            PortadaArea(libro.area, tamano = 88.dp)
-            Spacer(Modifier.width(18.dp))
+        // Cabecera del color del área: cada libro tiene su identidad.
+        Row(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(color.fondo.copy(alpha = 0.45f)).padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            PortadaLibro(libro.area, Modifier.width(96.dp))
+            Spacer(Modifier.width(20.dp))
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(libro.area, style = MaterialTheme.typography.labelLarge, color = color.tinta)
                 Text(libro.titulo, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
-                Text(libro.area, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Dato(Icons.Outlined.Description, textoPaginas(libro.paginas))
-                    Dato(Icons.Outlined.Schedule, tiempoRelativo(libro.fechaIngesta, ahora))
-                }
+                Spacer(Modifier.height(4.dp))
+                Dato(Icons.Outlined.Description, textoPaginas(libro.paginas))
+                Dato(Icons.Outlined.Schedule, "Escaneado ${tiempoRelativo(libro.fechaIngesta, ahora).replaceFirstChar { it.lowercase() }}")
             }
         }
         // En el teléfono los botones se apilan para que el texto no se parta en dos líneas.
@@ -289,12 +298,26 @@ private fun Cabecera(libro: LibroUi, ahora: Long, acciones: AccionesLibro) {
 }
 
 @Composable
-private fun TarjetaPagina(pagina: Pagina, onClick: () -> Unit) {
+private fun TarjetaPagina(pagina: Pagina, color: ColorArea, onClick: () -> Unit) {
+    val interaccion = remember { MutableInteractionSource() }
     // Altura mínima de tres líneas de vista previa: las tarjetas de una fila quedan parejas.
-    Surface(onClick = onClick, shape = RoundedCornerShape(20.dp), border = BorderStroke(1.dp, Line), color = Paper, modifier = Modifier.fillMaxWidth().heightIn(min = 124.dp)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("Página ${pagina.numero}", style = MaterialTheme.typography.titleMedium)
-            Text(pagina.texto, style = MaterialTheme.typography.bodyMedium, color = TextSecondary, maxLines = 3, overflow = TextOverflow.Ellipsis)
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(20.dp),
+        color = Paper,
+        interactionSource = interaccion,
+        modifier = Modifier.fillMaxWidth().heightIn(min = 124.dp).encogerAlPresionar(interaccion),
+    ) {
+        Row(Modifier.padding(16.dp)) {
+            // Número de página como marcador, en el color del libro.
+            Box(Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(color.fondo), contentAlignment = Alignment.Center) {
+                Text("${pagina.numero}", style = MaterialTheme.typography.titleMedium, color = color.tinta)
+            }
+            Spacer(Modifier.width(14.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text("Página ${pagina.numero}", style = MaterialTheme.typography.titleMedium)
+                Text(pagina.texto, style = MaterialTheme.typography.bodyMedium, color = TextSecondary, maxLines = 3, overflow = TextOverflow.Ellipsis)
+            }
         }
     }
 }

@@ -53,7 +53,7 @@ class ChatViewModel(
                 val libro = c.libroId?.let { libros.obtener(it) }
                 tituloLibro = libro?.titulo
                 // El subtítulo muestra el libro cuando el título de la conversación es otro.
-                _estado.update { it.copy(titulo = c.titulo, subtitulo = libro?.titulo?.takeIf { t -> t != c.titulo }) }
+                _estado.update { it.copy(titulo = c.titulo, subtitulo = libro?.titulo?.takeIf { t -> t != c.titulo }, area = libro?.areaCurso) }
             }
         }
         viewModelScope.launch {
