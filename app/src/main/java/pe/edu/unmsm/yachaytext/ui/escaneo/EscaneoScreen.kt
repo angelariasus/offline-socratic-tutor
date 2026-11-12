@@ -52,6 +52,9 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
@@ -310,7 +313,25 @@ private fun MarcoGuia() {
             val radio = CornerRadius(24.dp.toPx())
             drawRect(Color.Black.copy(alpha = 0.45f))
             drawRoundRect(Color.Transparent, origen, Size(ancho, alto), radio, blendMode = BlendMode.Clear)
-            drawRoundRect(Color.White, origen, Size(ancho, alto), radio, style = Stroke(3.dp.toPx()))
+            // Esquinas de escáner en lugar de un marco cerrado: indican «encuadra la página aquí».
+            val trazo = 5.dp.toPx()
+            val brazo = ancho * 0.16f
+            val r = radio.x
+            // Cada esquina: (punto de la esquina, dirección horizontal, dirección vertical hacia adentro).
+            listOf(
+                Triple(origen, 1f, 1f),
+                Triple(Offset(origen.x + ancho, origen.y), -1f, 1f),
+                Triple(Offset(origen.x + ancho, origen.y + alto), -1f, -1f),
+                Triple(Offset(origen.x, origen.y + alto), 1f, -1f),
+            ).forEach { (c, sx, sy) ->
+                val esquina = Path().apply {
+                    moveTo(c.x, c.y + sy * brazo)
+                    lineTo(c.x, c.y + sy * r)
+                    quadraticTo(c.x, c.y, c.x + sx * r, c.y)
+                    lineTo(c.x + sx * brazo, c.y)
+                }
+                drawPath(esquina, Color.White, style = Stroke(trazo, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            }
         }
     }
 }

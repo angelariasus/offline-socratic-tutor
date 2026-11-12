@@ -2,6 +2,9 @@ package pe.edu.unmsm.yachaytext.ui.common
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -213,6 +216,23 @@ fun CampoTexto(
                 campo()
             },
         )
+    }
+}
+
+/** Sección con título e ícono y su contenido en un bloque blanco (Ajustes, revisión). */
+@Composable
+fun SeccionTarjeta(titulo: String, icono: ImageVector, modifier: Modifier = Modifier, contenido: @Composable () -> Unit) {
+    Column(modifier.fillMaxWidth()) {
+        Row(Modifier.padding(top = 16.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(32.dp).clip(CircleShape).background(BrandSoft), contentAlignment = Alignment.Center) {
+                Icon(icono, contentDescription = null, tint = Brand, modifier = Modifier.size(18.dp))
+            }
+            Spacer(Modifier.width(10.dp))
+            Text(titulo, style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
+        }
+        Surface(color = Paper, shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) { contenido() }
+        }
     }
 }
 

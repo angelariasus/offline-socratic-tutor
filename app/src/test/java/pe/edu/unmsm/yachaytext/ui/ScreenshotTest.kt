@@ -155,7 +155,7 @@ class ScreenshotTest {
         RevisionScreen(
             RevisionUiState(
                 texto = textoOcr,
-                libros = listOf(LibroOpcion(1, "Ciencia y Tecnología 5"), LibroOpcion(2, "Matemática 5")),
+                libros = listOf(LibroOpcion(1, "Ciencia y Tecnología 5", "Ciencia y Tecnología"), LibroOpcion(2, "Matemática 5", "Matemática")),
                 libroElegido = 1,
                 pagina = "43",
             ),
@@ -217,7 +217,7 @@ class ScreenshotTest {
         RevisionScreen(
             RevisionUiState(
                 texto = textoOcr,
-                libros = listOf(LibroOpcion(1, "Ciencia y Tecnología 5"), LibroOpcion(2, "Matemática 5")),
+                libros = listOf(LibroOpcion(1, "Ciencia y Tecnología 5", "Ciencia y Tecnología"), LibroOpcion(2, "Matemática 5", "Matemática")),
                 libroElegido = 1,
                 pagina = "42",
                 paginasGuardadas = setOf(42),

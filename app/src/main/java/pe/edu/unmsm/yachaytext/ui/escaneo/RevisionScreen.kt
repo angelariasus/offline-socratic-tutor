@@ -30,6 +30,24 @@ import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Forum
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Tag
+import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.remember
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextOverflow
+import pe.edu.unmsm.yachaytext.ui.common.FormaPortada
+import pe.edu.unmsm.yachaytext.ui.common.PortadaLibro
+import pe.edu.unmsm.yachaytext.ui.common.SeccionTarjeta
+import pe.edu.unmsm.yachaytext.ui.common.encogerAlPresionar
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -84,7 +102,7 @@ import pe.edu.unmsm.yachaytext.ui.theme.Brand
 import pe.edu.unmsm.yachaytext.ui.theme.BrandSoft
 import pe.edu.unmsm.yachaytext.ui.theme.Linen
 
-data class LibroOpcion(val id: Long, val titulo: String)
+data class LibroOpcion(val id: Long, val titulo: String, val area: String = "")
 
 sealed interface FaseRevision {
     data object Editando : FaseRevision
@@ -127,7 +145,7 @@ class RevisionViewModel(
         viewModelScope.launch {
             var primeraVez = true
             libros.observarLibros().collect { lista ->
-                val opciones = lista.map { LibroOpcion(it.id, it.titulo) }
+                val opciones = lista.map { LibroOpcion(it.id, it.titulo, it.areaCurso) }
                 _estado.update { e ->
                     // La primera vez se propone el libro desde el que se empezó a escanear o, si no,
                     // el más reciente: lo habitual es seguir escaneando el mismo.
@@ -306,35 +324,44 @@ private fun Formulario(estado: RevisionUiState, acciones: AccionesRevision) {
 
 @Composable
 private fun TextoOcr(estado: RevisionUiState, acciones: AccionesRevision, alturaMinima: Dp) {
-        Surface(color = Mist, shape = RoundedCornerShape(16.dp)) {
-            Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Outlined.Info, contentDescription = null, tint = Ink)
-                Spacer(Modifier.width(12.dp))
-                Text("Corrige las palabras que la cámara leyó mal antes de guardar.", style = MaterialTheme.typography.bodyMedium)
-            }
+    SeccionTarjeta("Texto de la página", Icons.Outlined.Description) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Outlined.Info, contentDescription = null, tint = Brand, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(10.dp))
+            Text("Corrige las palabras que la cámara leyó mal antes de guardar.", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
         }
-        EtiquetaCampo("Texto de la página")
         CampoTexto(estado.texto, acciones.onTexto, "Escribe o pega el texto de la página", unaLinea = false, alturaMinima = alturaMinima, modifier = Modifier.fillMaxWidth())
+    }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DatosPagina(estado: RevisionUiState, acciones: AccionesRevision) {
-        Etiqueta("¿De qué libro es?")
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            estado.libros.forEach { libro -> ChipSeleccion(libro.titulo, estado.libroElegido == libro.id, { acciones.onLibro(libro.id) }) }
-            ChipSeleccion("Libro nuevo", estado.libroElegido == null, { acciones.onLibro(null) }, icono = Icons.Outlined.Add)
+    SeccionTarjeta("¿De qué libro es?", Icons.AutoMirrored.Outlined.LibraryBooks) {
+        // Los libros se eligen por su portada, igual que en la Biblioteca.
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            items(estado.libros, key = { it.id }) { libro ->
+                OpcionLibro(libro.titulo, estado.libroElegido == libro.id, { acciones.onLibro(libro.id) }) { PortadaLibro(libro.area, Modifier.fillMaxWidth()) }
+            }
+            item {
+                OpcionLibro("Libro nuevo", estado.libroElegido == null, { acciones.onLibro(null) }) {
+                    Box(Modifier.fillMaxWidth().aspectRatio(3f / 4f).clip(FormaPortada).background(BrandSoft), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Outlined.Add, contentDescription = null, tint = Brand, modifier = Modifier.size(32.dp))
+                    }
+                }
+            }
         }
         if (estado.libroElegido == null) {
             EtiquetaCampo("Título del libro")
             CampoTexto(estado.tituloNuevo, acciones.onTitulo, "Por ejemplo, «Ciencia y Tecnología 5»", modifier = Modifier.fillMaxWidth())
-            Etiqueta("Área")
+            EtiquetaCampo("Área")
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 AREAS_CURRICULARES.forEach { area -> ChipSeleccion(area, estado.areaNueva == area, { acciones.onArea(area) }, icono = iconoArea(area)) }
             }
         }
+    }
 
-        Etiqueta("Número de página")
+    SeccionTarjeta("Número de página", Icons.Outlined.Tag) {
         CampoTexto(
             estado.pagina,
             acciones.onPagina,
@@ -354,7 +381,31 @@ private fun DatosPagina(estado: RevisionUiState, acciones: AccionesRevision) {
                 }
             }
         }
-        Spacer(Modifier.height(8.dp))
+    }
+    Spacer(Modifier.height(8.dp))
+}
+
+/** Libro elegible por su portada; el elegido lleva un marco verde y una marca. */
+@Composable
+private fun OpcionLibro(titulo: String, elegido: Boolean, onClick: () -> Unit, portada: @Composable () -> Unit) {
+    val interaccion = remember { MutableInteractionSource() }
+    Column(
+        Modifier
+            .width(88.dp)
+            .encogerAlPresionar(interaccion)
+            .selectable(elegido, interactionSource = interaccion, indication = null, role = Role.RadioButton, onClick = onClick),
+    ) {
+        Box {
+            Box(Modifier.then(if (elegido) Modifier.border(3.dp, Brand, FormaPortada) else Modifier).padding(3.dp)) { portada() }
+            if (elegido) {
+                Box(Modifier.align(Alignment.TopEnd).padding(2.dp).size(24.dp).clip(CircleShape).background(Brand), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Outlined.Check, contentDescription = null, tint = Paper, modifier = Modifier.size(16.dp))
+                }
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(titulo, style = MaterialTheme.typography.labelMedium, color = if (elegido) Brand else Ink, maxLines = 2, overflow = TextOverflow.Ellipsis)
+    }
 }
 
 @Composable
@@ -377,7 +428,9 @@ private fun Indexando(fase: FaseRevision.Indexando) {
 @Composable
 private fun Listo(fase: FaseRevision.Listo, acciones: AccionesRevision) {
     Column(Modifier.fillMaxSize().padding(32.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = Brand, modifier = Modifier.size(72.dp))
+        Box(Modifier.size(96.dp).clip(CircleShape).background(BrandSoft), contentAlignment = Alignment.Center) {
+            Icon(Icons.Outlined.Check, contentDescription = null, tint = Brand, modifier = Modifier.size(52.dp))
+        }
         Spacer(Modifier.height(16.dp))
         Text("Página guardada", style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(8.dp))

@@ -38,6 +38,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import pe.edu.unmsm.yachaytext.ui.common.DialogoAyuda
 import pe.edu.unmsm.yachaytext.ui.common.SelectorGrado
+import pe.edu.unmsm.yachaytext.ui.common.SeccionTarjeta
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -246,18 +247,8 @@ private fun Cabecera(nombre: String, grado: String?) {
 }
 
 @Composable
-private fun Seccion(titulo: String, icono: ImageVector, contenido: @Composable () -> Unit) {
-    Row(Modifier.padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(32.dp).clip(CircleShape).background(BrandSoft), contentAlignment = Alignment.Center) {
-            Icon(icono, contentDescription = null, tint = Brand, modifier = Modifier.size(18.dp))
-        }
-        Spacer(Modifier.width(10.dp))
-        Text(titulo, style = MaterialTheme.typography.titleMedium, modifier = Modifier.semantics { heading() })
-    }
-    Surface(color = Paper, shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) { contenido() }
-    }
-}
+private fun Seccion(titulo: String, icono: ImageVector, contenido: @Composable () -> Unit) =
+    SeccionTarjeta(titulo, icono, contenido = contenido)
 
 @Composable
 private fun Subtitulo(texto: String) {
