@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
@@ -58,7 +57,7 @@ import pe.edu.unmsm.yachaytext.data.LibroRepository
 import pe.edu.unmsm.yachaytext.ui.common.BotonPrincipal
 import pe.edu.unmsm.yachaytext.ui.common.ChipSeleccion
 import pe.edu.unmsm.yachaytext.ui.common.EstadoVacio
-import pe.edu.unmsm.yachaytext.ui.common.TarjetaLibro
+import pe.edu.unmsm.yachaytext.ui.common.TarjetaPortada
 import pe.edu.unmsm.yachaytext.ui.common.iconoArea
 import pe.edu.unmsm.yachaytext.ui.theme.Ink
 import pe.edu.unmsm.yachaytext.ui.theme.Mist
@@ -66,8 +65,6 @@ import pe.edu.unmsm.yachaytext.ui.theme.Paper
 import pe.edu.unmsm.yachaytext.ui.theme.TextSecondary
 import pe.edu.unmsm.yachaytext.ui.theme.Brand
 import pe.edu.unmsm.yachaytext.ui.theme.Linen
-
-private val AltoTarjetaLibro = 132.dp
 
 data class BibliotecaUiState(
     val libros: List<LibroUi> = emptyList(),
@@ -142,11 +139,12 @@ fun BibliotecaScreen(
                     Buscador(estado.consulta, onBuscar, Modifier.padding(start = 20.dp, end = 20.dp, top = 20.dp))
                     FiltroAreas(estado.areas, estado.area, onArea)
                     LazyVerticalGrid(
-                        columns = GridCells.Adaptive(270.dp),
+                        // Portadas de libro: 2 columnas en el teléfono, 3 en la tableta vertical, 5 en horizontal.
+                        columns = GridCells.Adaptive(150.dp),
                         modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 20.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(28.dp),
                     ) {
                         if (estado.visibles.isEmpty()) {
                             item(span = { GridItemSpan(maxLineSpan) }) {
@@ -160,8 +158,7 @@ fun BibliotecaScreen(
                             }
                         }
                         itemsGrid(estado.visibles, key = { it.id }) { libro ->
-                            // Altura mínima común: las tarjetas de una misma fila quedan parejas.
-                            TarjetaLibro(libro, ahora, onClick = { onAbrirLibro(libro.id) }, modifier = Modifier.heightIn(min = AltoTarjetaLibro))
+                            TarjetaPortada(libro, ahora, onClick = { onAbrirLibro(libro.id) })
                         }
                     }
                 }

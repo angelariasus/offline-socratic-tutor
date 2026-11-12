@@ -74,6 +74,10 @@ class ScreenshotTest {
 
     @Test fun appShell() = capturar("app_shell") { YachayApp() }
 
+    @Test
+    @Config(qualifiers = HORIZONTAL)
+    fun appShellHorizontal() = capturar("app_shell_horizontal") { YachayApp() }
+
     @Test fun chatConversacion() = chat("chat_conversacion", ChatPreviewData.conversacion)
 
     @Test fun chatPensando() = chat("chat_pensando", ChatPreviewData.pensandoYEscribiendo)
