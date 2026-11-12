@@ -270,24 +270,21 @@ private fun ColumnaLibros(estado: InicioUiState, acciones: AccionesInicio, ahora
 /** Saludo y las dos acciones principales en un solo bloque: el ancla visual de Inicio. */
 @Composable
 private fun Portada(nombre: String?, acciones: AccionesInicio, alto: Dp, modifier: Modifier = Modifier) {
-    Box(
-        modifier
-            .fillMaxWidth()
-            .height(alto)
-            .clip(RoundedCornerShape(32.dp))
-            .background(Brand),
-    ) {
-        PaisajeAndino()
-        Column(Modifier.fillMaxWidth(0.66f).padding(start = 24.dp, top = 28.dp)) {
-            Text(if (nombre != null) "Hola," else "Hola", style = MaterialTheme.typography.titleLarge, color = Paper)
-            Text(nombre ?: "¿Qué aprendemos hoy?", style = MaterialTheme.typography.displaySmall, color = Paper, modifier = Modifier.semantics { heading() })
+    // Sin recuadro: el saludo va directo sobre el fondo y el paisaje queda como ilustración suelta.
+    Column(modifier.fillMaxWidth()) {
+        Box(Modifier.fillMaxWidth().height(alto - 72.dp)) {
+            PaisajeAndino()
+            Column(Modifier.fillMaxWidth(0.62f).align(Alignment.BottomStart).padding(bottom = 8.dp)) {
+                Text(if (nombre != null) "Hola," else "Hola", style = MaterialTheme.typography.titleLarge, color = TextSecondary)
+                Text(nombre ?: "¿Qué aprendemos hoy?", style = MaterialTheme.typography.displaySmall, color = Ink, modifier = Modifier.semantics { heading() })
+            }
         }
         Row(
-            Modifier.align(Alignment.BottomStart).widthIn(max = 560.dp).fillMaxWidth().padding(16.dp),
+            Modifier.widthIn(max = 560.dp).fillMaxWidth().padding(top = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            AccionPortada("Pregúntale a Yachay", Icons.Outlined.Forum, Paper, Ink, acciones.onPreguntar, Modifier.weight(1.4f))
-            AccionPortada("Escanear", Icons.Outlined.CameraAlt, Paper.copy(alpha = 0.18f), Paper, acciones.onEscanear, Modifier.weight(1f))
+            AccionPortada("Pregúntale a Yachay", Icons.Outlined.Forum, Brand, Paper, acciones.onPreguntar, Modifier.weight(1.4f))
+            AccionPortada("Escanear", Icons.Outlined.CameraAlt, BrandSoft, Brand, acciones.onEscanear, Modifier.weight(1f))
         }
     }
 }
