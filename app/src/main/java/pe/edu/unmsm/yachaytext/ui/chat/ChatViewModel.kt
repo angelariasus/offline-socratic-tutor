@@ -41,6 +41,7 @@ class ChatViewModel(
 
     /** Libro de la conversación: limita la búsqueda a sus páginas. null = busca en toda la biblioteca. */
     private var libroId: Long? = null
+    private var tituloLibro: String? = null
 
     init {
         viewModelScope.launch {
@@ -50,6 +51,7 @@ class ChatViewModel(
             repositorio.conversacion(conversacionId)?.let { c ->
                 libroId = c.libroId
                 val libro = c.libroId?.let { libros.obtener(it) }
+                tituloLibro = libro?.titulo
                 // El subtítulo muestra el libro cuando el título de la conversación es otro.
                 _estado.update { it.copy(titulo = c.titulo, subtitulo = libro?.titulo?.takeIf { t -> t != c.titulo }) }
             }
@@ -85,10 +87,13 @@ class ChatViewModel(
         viewModelScope.launch {
             try {
                 repositorio.guardarMensaje(conversacionId, RolMensaje.ESTUDIANTE, texto, porVoz)
-                if (_estado.value.titulo == IniciarConsulta.TITULO_PROVISIONAL) {
+                // La primera pregunta da nombre a la conversación (también si se abrió desde un libro,
+                // que si no repetiría el título del libro en las listas).
+                val provisional = _estado.value.titulo.let { it == IniciarConsulta.TITULO_PROVISIONAL || it == tituloLibro }
+                if (provisional && historial.none { it.rol == RolMensaje.ESTUDIANTE }) {
                     val titulo = tituloDesde(texto)
                     repositorio.renombrar(conversacionId, titulo)
-                    _estado.update { it.copy(titulo = titulo) }
+                    _estado.update { it.copy(titulo = titulo, subtitulo = tituloLibro) }
                 }
                 val contexto = buscador.buscar(texto, libroId)
                 val respuesta = tutor.responder(historial, texto, contexto, preferencias.actual().nivelAyuda)

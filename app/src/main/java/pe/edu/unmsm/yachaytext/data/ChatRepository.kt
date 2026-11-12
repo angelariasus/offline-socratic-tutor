@@ -31,6 +31,9 @@ class ChatRepository(
 
     suspend fun conversacion(id: Long): ConversacionEntity? = db.conversacionDao().getById(id)
 
+    /** Conversaciones abiertas sin ninguna pregunta: no se listan y se limpian al crear otra. */
+    suspend fun borrarVacias() = db.conversacionDao().borrarVacias()
+
     suspend fun crearConversacion(titulo: String, saludo: String, libroId: Long? = null): Long {
         val id = db.conversacionDao().insert(ConversacionEntity(libroId = libroId, titulo = titulo, fechaInicio = ahora()))
         guardarMensaje(id, RolMensaje.TUTOR, saludo)

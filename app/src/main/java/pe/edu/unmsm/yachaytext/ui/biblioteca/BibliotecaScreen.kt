@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
@@ -65,6 +66,8 @@ import pe.edu.unmsm.yachaytext.ui.theme.Paper
 import pe.edu.unmsm.yachaytext.ui.theme.TextSecondary
 import pe.edu.unmsm.yachaytext.ui.theme.Brand
 import pe.edu.unmsm.yachaytext.ui.theme.Linen
+
+private val AltoTarjetaLibro = 132.dp
 
 data class BibliotecaUiState(
     val libros: List<LibroUi> = emptyList(),
@@ -157,7 +160,8 @@ fun BibliotecaScreen(
                             }
                         }
                         itemsGrid(estado.visibles, key = { it.id }) { libro ->
-                            TarjetaLibro(libro, ahora, onClick = { onAbrirLibro(libro.id) })
+                            // Altura mínima común: las tarjetas de una misma fila quedan parejas.
+                            TarjetaLibro(libro, ahora, onClick = { onAbrirLibro(libro.id) }, modifier = Modifier.heightIn(min = AltoTarjetaLibro))
                         }
                     }
                 }

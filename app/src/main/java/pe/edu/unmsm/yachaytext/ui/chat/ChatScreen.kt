@@ -9,6 +9,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -24,7 +25,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -41,6 +41,7 @@ import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Quiz
 import androidx.compose.material.icons.outlined.StopCircle
 import androidx.compose.material.icons.outlined.Abc
+import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.OfflinePin
 import androidx.compose.material.icons.outlined.QuestionAnswer
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -54,6 +55,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import pe.edu.unmsm.yachaytext.ui.common.ChipSeleccion
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.rememberScrollState
@@ -162,8 +167,14 @@ fun ChatScreen(
                 }
                 if (estado.pensando) item(key = "pensando") { Pensando() }
             }
-            Atajos(habilitados = !estado.pensando, onAtajo = onAtajo)
-            Compositor(estado, onCambiarEntrada, onEnviar, onMicrofono, foco)
+            // Los atajos ayudan a empezar; después se ocultan para dar espacio a la conversación.
+            var verAtajos by rememberSaveable(estado.sinPreguntas) { mutableStateOf(estado.sinPreguntas) }
+            if (verAtajos) Atajos(habilitados = !estado.pensando, onAtajo = { verAtajos = estado.sinPreguntas; onAtajo(it) })
+            Compositor(
+                estado, onCambiarEntrada, onEnviar, onMicrofono, foco,
+                atajosVisibles = verAtajos,
+                onAlternarAtajos = if (estado.sinPreguntas) null else { { verAtajos = !verAtajos } },
+            )
         }
     }
     estado.fuenteAbierta?.let { f ->
@@ -292,13 +303,15 @@ private fun Pensando() {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Atajos(habilitados: Boolean, onAtajo: (Atajo) -> Unit) {
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+    FlowRow(
+        Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        items(Atajo.entries) { atajo ->
+        Atajo.entries.forEach { atajo ->
             BotonPildora(
                 icono = when (atajo) {
                     Atajo.Explicame -> Icons.Outlined.QuestionAnswer
@@ -320,6 +333,8 @@ private fun Compositor(
     onEnviar: () -> Unit,
     onMicrofono: () -> Unit,
     foco: FocusRequester,
+    atajosVisibles: Boolean = false,
+    onAlternarAtajos: (() -> Unit)? = null,
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp, top = 4.dp),
@@ -361,12 +376,24 @@ private fun Compositor(
                     onClick = onMicrofono,
                 )
                 Spacer(Modifier.width(8.dp))
-                Row(Modifier.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.OfflinePin, contentDescription = null, tint = Brand, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text("Funciona sin internet", style = MaterialTheme.typography.labelMedium, color = TextSecondary)
+                if (onAlternarAtajos != null) {
+                    ChipSeleccion("Atajos", atajosVisibles, onAlternarAtajos, icono = Icons.Outlined.Bolt)
+                    Spacer(Modifier.width(8.dp))
                 }
-                Spacer(Modifier.weight(1f))
+                // En pantallas angostas queda solo el ícono (con su descripción para TalkBack).
+                BoxWithConstraints(Modifier.weight(1f).padding(horizontal = 4.dp)) {
+                    val cabeTexto = maxWidth >= 170.dp
+                    Row(
+                        Modifier.semantics(mergeDescendants = true) { if (!cabeTexto) contentDescription = "Funciona sin internet" },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(Icons.Outlined.OfflinePin, contentDescription = null, tint = Brand, modifier = Modifier.size(18.dp))
+                        if (cabeTexto) {
+                            Spacer(Modifier.width(6.dp))
+                            Text("Funciona sin internet", style = MaterialTheme.typography.labelMedium, color = TextSecondary, maxLines = 1)
+                        }
+                    }
+                }
                 BotonCircular(
                     icono = Icons.Filled.ArrowUpward,
                     descripcion = "Enviar",

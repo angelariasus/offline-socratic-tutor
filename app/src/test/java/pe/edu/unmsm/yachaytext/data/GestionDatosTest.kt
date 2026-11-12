@@ -79,6 +79,18 @@ class GestionDatosTest {
     }
 
     @Test
+    fun lasConversacionesSinPreguntasNoSeListanYSeLimpian() = runTest {
+        val vacia = chat.crearConversacion("Nueva pregunta", "Hola")
+        val conPregunta = chat.crearConversacion("Las nubes", "Hola")
+        chat.guardarMensaje(conPregunta, RolMensaje.ESTUDIANTE, "¿Por qué llueve?")
+
+        assertEquals(listOf(conPregunta), chat.observarConversaciones().first().map { it.id })
+        chat.borrarVacias()
+        assertNull(chat.conversacion(vacia))
+        assertNotNull(chat.conversacion(conPregunta))
+    }
+
+    @Test
     fun deshacerRestauraLaConversacionConSusMensajesYFuentes() = runTest {
         val libroId = libroConPaginas(42)
         val fragmento = db.fragmentoDao().getByLibro(libroId).first()

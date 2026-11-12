@@ -237,6 +237,16 @@ class ScreenshotTest {
 
     @Test
     @Config(qualifiers = HORIZONTAL)
+    fun inicioHorizontal() = capturar("inicio_horizontal") {
+        InicioScreen(
+            InicioUiState(nombre = "Angel", conversaciones = CONVERSACIONES, libros = LIBROS.take(3), totalLibros = LIBROS.size, cargando = false),
+            AccionesInicio(),
+            ahora = AHORA,
+        )
+    }
+
+    @Test
+    @Config(qualifiers = HORIZONTAL)
     fun libroDetalleHorizontal() = capturar("libro_detalle_horizontal") {
         LibroScreen(LibroDetalleUiState(LIBROS[0], paginas, cargando = false), AccionesLibro(), ahora = AHORA)
     }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.width
@@ -269,16 +271,27 @@ private fun Cabecera(libro: LibroUi, ahora: Long, acciones: AccionesLibro) {
                 }
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            BotonPrincipal("Preguntar sobre este libro", acciones.onPreguntar, icono = Icons.Outlined.Forum, modifier = Modifier.weight(1f))
-            BotonSecundario("Escanear página", acciones.onEscanear, icono = Icons.Outlined.CameraAlt, modifier = Modifier.weight(1f))
+        // En el teléfono los botones se apilan para que el texto no se parta en dos líneas.
+        BoxWithConstraints {
+            if (maxWidth >= 520.dp) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    BotonPrincipal("Preguntar sobre este libro", acciones.onPreguntar, icono = Icons.Outlined.Forum, modifier = Modifier.weight(1f))
+                    BotonSecundario("Escanear página", acciones.onEscanear, icono = Icons.Outlined.CameraAlt, modifier = Modifier.weight(1f))
+                }
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    BotonPrincipal("Preguntar sobre este libro", acciones.onPreguntar, icono = Icons.Outlined.Forum, modifier = Modifier.fillMaxWidth())
+                    BotonSecundario("Escanear página", acciones.onEscanear, icono = Icons.Outlined.CameraAlt, modifier = Modifier.fillMaxWidth())
+                }
+            }
         }
     }
 }
 
 @Composable
 private fun TarjetaPagina(pagina: Pagina, onClick: () -> Unit) {
-    Surface(onClick = onClick, shape = RoundedCornerShape(20.dp), border = BorderStroke(1.dp, Line), color = Paper, modifier = Modifier.fillMaxWidth()) {
+    // Altura mínima de tres líneas de vista previa: las tarjetas de una fila quedan parejas.
+    Surface(onClick = onClick, shape = RoundedCornerShape(20.dp), border = BorderStroke(1.dp, Line), color = Paper, modifier = Modifier.fillMaxWidth().heightIn(min = 124.dp)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text("Página ${pagina.numero}", style = MaterialTheme.typography.titleMedium)
             Text(pagina.texto, style = MaterialTheme.typography.bodyMedium, color = TextSecondary, maxLines = 3, overflow = TextOverflow.Ellipsis)

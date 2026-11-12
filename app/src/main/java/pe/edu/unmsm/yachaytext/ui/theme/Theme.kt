@@ -9,6 +9,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 
 private val LightColors = lightColorScheme(
     primary = Brand,
@@ -31,6 +32,9 @@ private val LightColors = lightColorScheme(
     outline = Line,
     outlineVariant = Line,
     error = Danger,
+    inverseSurface = Ink,
+    inverseOnSurface = Linen,
+    inversePrimary = Color(0xFF9AD8BD),
 )
 
 // Radios de Figma: tarjetas ~20 dp, campos ~30 dp (píldora).

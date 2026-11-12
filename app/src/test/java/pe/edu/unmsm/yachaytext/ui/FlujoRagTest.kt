@@ -59,6 +59,8 @@ class FlujoRagTest {
 
         composeRule.waitUntilAtLeastOneExists(hasText("página 42", substring = true), 10_000)
         composeRule.waitUntilAtLeastOneExists(hasText("Ciencia y Tecnología 5 · pág. 42"), 5_000)
+        // La primera pregunta da nombre a la conversación; el libro queda como subtítulo.
+        composeRule.waitUntilAtLeastOneExists(hasText("Qué absorben las raíces"), 5_000)
         composeRule.onRoot().captureRoboImage("screenshots/flujo_rag.png")
 
         // La cita abre el texto completo de la página (transparencia de la fuente).

@@ -4,6 +4,9 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -140,49 +143,67 @@ fun InicioRoute(
 
 @Composable
 fun InicioScreen(estado: InicioUiState, acciones: AccionesInicio, ahora: Long = System.currentTimeMillis()) {
-    Box(Modifier.fillMaxSize().background(Linen).statusBarsPadding(), contentAlignment = Alignment.TopCenter) {
-        LazyColumn(
-            modifier = Modifier.widthIn(max = 720.dp).fillMaxSize(),
-            contentPadding = PaddingValues(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            item { Saludo(estado.nombre) }
-            item { Acciones(acciones.onPreguntar, acciones.onEscanear) }
-
-            if (!estado.cargando && estado.conversaciones.isEmpty() && estado.libros.isEmpty()) {
-                item {
-                    EstadoVacio(
-                        icono = Icons.AutoMirrored.Outlined.LibraryBooks,
-                        titulo = "Empieza con tu libro",
-                        texto = "Escanea una página o hazle una pregunta a Yachay. Todo funciona sin internet.",
-                        accion = "Escanear página",
-                        onAccion = acciones.onEscanear,
-                    )
+    BoxWithConstraints(Modifier.fillMaxSize().background(Linen).statusBarsPadding(), contentAlignment = Alignment.TopCenter) {
+        val relleno = PaddingValues(20.dp)
+        val separacion = Arrangement.spacedBy(12.dp)
+        if (maxWidth >= 840.dp) {
+            // Tableta en horizontal: acciones y conversaciones a la izquierda, libros a la derecha.
+            Row(Modifier.widthIn(max = 1200.dp).fillMaxSize()) {
+                LazyColumn(Modifier.weight(1f).fillMaxHeight(), contentPadding = relleno, verticalArrangement = separacion) {
+                    cabecera(estado, acciones)
+                    conversaciones(estado, acciones, ahora)
+                }
+                LazyColumn(Modifier.weight(1f).fillMaxHeight(), contentPadding = relleno, verticalArrangement = separacion) {
+                    libros(estado, acciones, ahora)
                 }
             }
-
-            if (estado.conversaciones.isNotEmpty()) {
-                item { TituloSeccion("Continúa donde te quedaste") }
-                items(estado.conversaciones, key = { "c${it.id}" }) { c ->
-                    TarjetaConversacion(c.titulo, c.detalle(ahora), onClick = { acciones.onAbrirChat(c.id) }, area = c.area)
-                }
+        } else {
+            LazyColumn(Modifier.widthIn(max = 720.dp).fillMaxSize(), contentPadding = relleno, verticalArrangement = separacion) {
+                cabecera(estado, acciones)
+                conversaciones(estado, acciones, ahora)
+                libros(estado, acciones, ahora)
             }
+        }
+    }
+}
 
-            if (estado.libros.isNotEmpty()) {
-                item {
-                    TituloSeccion("Tus libros") {
-                        if (estado.totalLibros > estado.libros.size) {
-                            TextButton(onClick = acciones.onVerBiblioteca) {
-                                Text("Ver todos (${estado.totalLibros})", style = MaterialTheme.typography.labelLarge, color = Brand)
-                            }
-                        }
-                    }
-                }
-                items(estado.libros, key = { "l${it.id}" }) { libro ->
-                    TarjetaLibro(libro, ahora, onClick = { acciones.onAbrirLibro(libro.id) })
+private fun LazyListScope.cabecera(estado: InicioUiState, acciones: AccionesInicio) {
+    item { Saludo(estado.nombre) }
+    item { Acciones(acciones.onPreguntar, acciones.onEscanear) }
+    if (!estado.cargando && estado.conversaciones.isEmpty() && estado.libros.isEmpty()) {
+        item {
+            EstadoVacio(
+                icono = Icons.AutoMirrored.Outlined.LibraryBooks,
+                titulo = "Empieza con tu libro",
+                texto = "Escanea una página o hazle una pregunta a Yachay. Todo funciona sin internet.",
+                accion = "Escanear página",
+                onAccion = acciones.onEscanear,
+            )
+        }
+    }
+}
+
+private fun LazyListScope.conversaciones(estado: InicioUiState, acciones: AccionesInicio, ahora: Long) {
+    if (estado.conversaciones.isEmpty()) return
+    item { TituloSeccion("Continúa donde te quedaste") }
+    items(estado.conversaciones, key = { "c${it.id}" }) { c ->
+        TarjetaConversacion(c.titulo, c.detalle(ahora), onClick = { acciones.onAbrirChat(c.id) }, area = c.area)
+    }
+}
+
+private fun LazyListScope.libros(estado: InicioUiState, acciones: AccionesInicio, ahora: Long) {
+    if (estado.libros.isEmpty()) return
+    item {
+        TituloSeccion("Tus libros") {
+            if (estado.totalLibros > estado.libros.size) {
+                TextButton(onClick = acciones.onVerBiblioteca) {
+                    Text("Ver todos (${estado.totalLibros})", style = MaterialTheme.typography.labelLarge, color = Brand)
                 }
             }
         }
+    }
+    items(estado.libros, key = { "l${it.id}" }) { libro ->
+        TarjetaLibro(libro, ahora, onClick = { acciones.onAbrirLibro(libro.id) })
     }
 }
 

@@ -91,8 +91,19 @@ interface ConversacionDao {
     @Insert
     suspend fun insert(conversacion: ConversacionEntity): Long
 
-    @Query("SELECT * FROM conversacion ORDER BY fecha_inicio DESC")
+    /** Solo las conversaciones en las que el estudiante ya preguntó algo: las vacías no se listan. */
+    @Query(
+        "SELECT * FROM conversacion c WHERE EXISTS (SELECT 1 FROM mensaje m " +
+            "WHERE m.id_conversacion = c.id_conversacion AND m.rol = 'ESTUDIANTE') ORDER BY fecha_inicio DESC",
+    )
     fun observeAll(): Flow<List<ConversacionEntity>>
+
+    /** Borra las conversaciones abiertas y abandonadas sin ninguna pregunta del estudiante. */
+    @Query(
+        "DELETE FROM conversacion WHERE NOT EXISTS (SELECT 1 FROM mensaje m " +
+            "WHERE m.id_conversacion = conversacion.id_conversacion AND m.rol = 'ESTUDIANTE')",
+    )
+    suspend fun borrarVacias()
 
     @Query("SELECT * FROM conversacion WHERE id_conversacion = :id")
     suspend fun getById(id: Long): ConversacionEntity?

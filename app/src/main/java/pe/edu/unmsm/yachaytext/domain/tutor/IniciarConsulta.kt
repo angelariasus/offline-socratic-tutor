@@ -16,6 +16,7 @@ class IniciarConsulta(
             libros.hayLibros() -> TITULO_PROVISIONAL to Tema.General
             else -> "La fotosíntesis" to Tema.Ejemplo
         }
+        chat.borrarVacias()
         return chat.crearConversacion(titulo, tutor.saludo(tema), libro?.id)
     }
 
