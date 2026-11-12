@@ -127,4 +127,9 @@ mosaico([("Ajustes", "ajustes"), ("Texto muy grande", "ajustes_texto_muy_grande"
 # ---------- Figura 3.14: identidad visual (antes y después) ----------
 mosaico([("Antes (Sprint 2)", f"{OUT_DIR}/antes_inicio.png"), ("Después", "inicio_con_datos"), ("Logo en la bienvenida", "bienvenida_completa")],
         "fig3_14_identidad.png")
+# ---------- Figuras 3.15 y 3.16: evaluación heurística ----------
+mosaico([("Detalle de libro", "libro_detalle"), ("Aviso de reemplazo", "revision_reemplaza"), ("Conversaciones", "tutor_lista")],
+        "fig3_15_heuristica.png")
+mosaico([("Biblioteca en cuadrícula", "biblioteca_horizontal"), ("Revisión en dos columnas", "revision_horizontal")],
+        "fig3_16_horizontal.png")
 print("ok")

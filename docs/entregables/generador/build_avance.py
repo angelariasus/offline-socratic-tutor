@@ -252,7 +252,7 @@ B.append(para('La Biblioteca lista los libros escaneados con un buscador que ign
 B.append(caption('Figura 3.10', 'Pantallas de Inicio y Biblioteca implementadas'))
 B.append(figure(f'{IMG_DIR}/fig3_10_inicio_biblioteca.png', 6.2, 104))
 B.append(note('Elaboración propia. Capturas generadas con Roborazzi con datos de ejemplo.'))
-B.append(para('Mientras no se implemente la pantalla Detalle de libro (Tabla 3.8), tocar un libro abre directamente una consulta ligada a él.'))
+B.append(para('En el Sprint 2, mientras no existía la pantalla Detalle de libro (Tabla 3.8), tocar un libro abría directamente una consulta ligada a él; en el Sprint 3 se implementó el detalle, como se describe en el apartado «Evaluación heurística».'))
 
 B.append(heading('Escaneo e ingesta documental'))
 B.append(para('El flujo de ingesta documental de la Figura 3.6 se implementó en dos pantallas (Figura 3.11). La pantalla de escaneo muestra la vista previa de CameraX con un marco guía de proporción 3:4 que oscurece el exterior, un botón de linterna y un disparador; si el estudiante no concedió el permiso de cámara, explica para qué se usa antes de pedirlo. Al tomar la foto, ML Kit extrae el texto con el modelo incluido en el APK, sin descargar nada en el primer uso. Si no detecta texto, se pide acercar la página o buscar más luz.'))
@@ -311,11 +311,63 @@ B.append(caption('Figura 3.14', 'Pantalla de Inicio antes y después de la ident
 B.append(figure(f'{IMG_DIR}/fig3_14_identidad.png', 6.2, 108))
 B.append(note('Elaboración propia. Capturas generadas con Roborazzi. Las demás figuras de este documento ya muestran la identidad visual.'))
 
+B.append(heading('Evaluación heurística'))
+B.append(para('Con el flujo del estudiante completo, se realizó una evaluación heurística experta de la interfaz con las diez heurísticas de usabilidad de Nielsen (1994a), clasificando cada problema con su escala de severidad de 0 (no es un problema) a 4 (catástrofe de usabilidad) (Nielsen, 1994b). Se revisaron las capturas de todas las pantallas y estados, el código de cada pantalla y los 38 íconos usados, y se contrastaron con las pautas de Material Design 3 (Google, s. f.). No se hallaron problemas de severidad 4. La Tabla 3.17 resume los problemas y su corrección; las heurísticas 7 (flexibilidad y eficiencia) y 9 (recuperación de errores) se cumplían, gracias a los atajos del chat, el dictado y los mensajes de error que explican la causa y la solución.'))
+B.append(caption('Tabla 3.17', 'Problemas de la evaluación heurística y su corrección'))
+B.append(table([2300, 3000, 700, 3360], ['Heurística', 'Problema', 'Sev.', 'Corrección'], [
+    ['3. Control y libertad', 'No se podían borrar ni renombrar libros, páginas ni conversaciones.', '3', 'Menú «Más opciones» con «Cambiar nombre» y «Borrar»; las conversaciones borradas se pueden recuperar con «Deshacer».'],
+    ['3. Control y libertad', 'Volver desde la revisión descartaba el texto corregido sin preguntar.', '3', 'Diálogo «¿Descartar esta página?» con la opción «Seguir revisando».'],
+    ['5. Prevención de errores', 'Volver a escanear una página la reemplazaba sin avisar.', '3', 'Aviso «La página 42 ya está guardada…» y botón «Reemplazar página 42».'],
+    ['1. Visibilidad del estado', 'El aviso «sin internet» usaba el ícono de wifi tachado, que se lee como un error.', '2', 'Ícono de disponible sin conexión y texto «Funciona sin internet».'],
+    ['2. Relación con el mundo real', 'Jerga interna: el texto se dividía en «partes» (fragmentos del RAG).', '2', 'Mensajes sin tecnicismos: «Preparando la página para Yachay…».'],
+    ['4. Consistencia y estándares', 'Tocar un libro abría un chat en lugar de mostrar el libro.', '2', 'Nueva pantalla Detalle de libro (Figura 3.15).'],
+    ['6. Reconocer antes que recordar', 'El botón de escanear en Inicio solo tenía un ícono.', '2', 'Botón «Escanear» con texto; la otra acción pasa a «Pregúntale a Yachay».'],
+    ['6. Reconocer antes que recordar', 'La cita «pág. 42» no permitía ver la página usada.', '2', 'Tocar la cita muestra el texto completo de la página.'],
+    ['6. Reconocer antes que recordar', 'Al iniciar una pregunta había que tocar otra vez la caja de texto.', '2', 'En una conversación nueva, el teclado se abre solo.'],
+    ['8. Estética y minimalismo', 'El botón «Escuchar» con borde se repetía en cada mensaje.', '2', 'Acciones del mensaje sin borde, en el color de marca, junto a la cita.'],
+    ['10. Ayuda y documentación', 'Nada explicaba el flujo de uso más allá de una frase.', '2', 'Guía de tres pasos en la bienvenida y en Ajustes («Cómo usar Yachay»).'],
+    ['2. Relación con el mundo real', '«Quiz rápido» y «Nueva consulta» no son lenguaje de un niño.', '1', '«Ponme a prueba» y «Nueva pregunta».'],
+    ['4. Consistencia y estándares', 'Las conversaciones se veían distinto en Inicio y en Tutor.', '1', 'Una sola tarjeta con el ícono del área, el libro y la antigüedad.'],
+    ['8. Estética y minimalismo', 'Los 11 grados ocupaban media pantalla.', '1', 'Selección en dos pasos: nivel (2 opciones) y grado (5 o 6).'],
+]))
+B.append(note('Elaboración propia. Sev. = severidad según Nielsen (1994b): 1, problema estético; 2, problema menor; 3, problema mayor.'))
+
+B.append(para('La iconografía se revisó para que cada ícono represente una sola metáfora (Tabla 3.18). El cambio principal es que el concepto «libro» tenía tres íconos distintos; ahora la pila de libros representa la biblioteca y cada libro muestra el ícono de su área curricular, lo que permite reconocerlo de un vistazo.'))
+B.append(caption('Tabla 3.18', 'Revisión de la iconografía'))
+B.append(table([2300, 2200, 2200, 2660], ['Concepto', 'Antes', 'Después', 'Motivo'], [
+    ['Pestaña Biblioteca', 'Persona leyendo', 'Pila de libros', 'A 24 dp se confundía con un ícono de usuario.'],
+    ['Libro', 'El mismo libro abierto en todos', 'Ícono del área curricular (por ejemplo, calculadora para Matemática y matraz para Ciencia y Tecnología)', 'El ícono aporta información y diferencia los libros.'],
+    ['Antigüedad («Hace 2 horas»)', 'Calendario', 'Reloj', 'El calendario representa una fecha, no un tiempo transcurrido.'],
+    ['«Explícame con preguntas»', 'Signo de interrogación', 'Globos de pregunta y respuesta', 'El «?» es el estándar de ayuda; el diálogo representa el método socrático.'],
+    ['«Palabras difíciles»', 'Traducir (文A)', 'Letras «ABC»', 'El ícono de traducir prometía una traducción.'],
+    ['Funciona sin internet', 'Wifi tachado', 'Disponible sin conexión', 'Comunica una ventaja, no un fallo.'],
+]))
+B.append(note('Elaboración propia. Íconos de Material Symbols (Google, s. f.).'))
+
+B.append(para('En la distribución del contenido se reforzó la jerarquía visual: los títulos de sección pasan a 22 sp en seminegrita, por encima de los títulos de las tarjetas (18 sp), y se marcan como encabezados para que TalkBack permita navegar por secciones; el texto secundario sube de 13 a 14 sp. La pantalla de revisión mantiene el botón «Guardar página» fijo en la parte inferior, porque en la tableta quedaba fuera de la vista. Además, las pantallas se adaptan al ancho disponible según las clases de tamaño de ventana de Material Design (Google, s. f.): la Biblioteca y el detalle de libro usan una cuadrícula que pasa de una columna en el teléfono a dos en la tableta vertical y tres en horizontal, y la revisión se divide en dos columnas (texto y datos de la página) a partir de 840 dp de ancho (Figura 3.16). El chat y los formularios conservan un ancho máximo de lectura de 720 dp.'))
+B.append(para('La nueva pantalla Detalle de libro muestra el área, el número de páginas y la fecha, las acciones «Preguntar sobre este libro» y «Escanear página» (que propone ese libro al guardar) y la lista de páginas escaneadas; al tocar una, se lee su texto completo y se puede borrar (Figura 3.15). Como el texto se guarda dividido en fragmentos que repiten una oración, la página se reconstruye uniendo los fragmentos sin duplicar la oración compartida.'))
+B.append(caption('Figura 3.15', 'Detalle de libro, aviso de reemplazo y lista de conversaciones'))
+B.append(figure(f'{IMG_DIR}/fig3_15_heuristica.png', 6.2, 109))
+B.append(note('Elaboración propia. Capturas generadas con Roborazzi.'))
+B.append(caption('Figura 3.16', 'Biblioteca y revisión en una tableta en horizontal'))
+B.append(figure(f'{IMG_DIR}/fig3_16_horizontal.png', 6.2, 110))
+B.append(note('Elaboración propia. Capturas generadas con Roborazzi con un ancho de 960 dp.'))
+B.append(para('Una evaluación experta no reemplaza la observación de usuarios reales. Por ello, en el Sprint 4 se realizará una prueba de usabilidad con cinco estudiantes, número con el que suele detectarse la mayor parte de los problemas de usabilidad (Nielsen & Landauer, 1993), con las tareas de la Tabla 3.19.'))
+B.append(caption('Tabla 3.19', 'Tareas de la prueba de usabilidad planificada'))
+B.append(table([800, 5000, 3560], ['N.º', 'Tarea', 'Criterio de éxito'], [
+    ['1', 'Escanear una página del libro de Ciencia y Tecnología y guardarla.', 'La página aparece en el detalle del libro sin ayuda.'],
+    ['2', 'Preguntar a Yachay qué necesitan las plantas para fabricar su alimento.', 'Envía la pregunta y lee o escucha la respuesta.'],
+    ['3', 'Encontrar en qué página del libro está la respuesta.', 'Toca la cita y lee la página.'],
+    ['4', 'Ver cómo se dice «agua» en quechua chanka.', 'Cambia la variante en Ajustes y la reconoce en el chat.'],
+    ['5', 'Borrar una conversación y recuperarla.', 'Usa «Borrar» y luego «Deshacer».'],
+]))
+B.append(note('Elaboración propia. Se medirán la tasa de éxito, el tiempo por tarea y los comentarios de los estudiantes.'))
+
 B.append(heading('Verificación en emulador'))
 B.append(para('Además de las pruebas en la JVM, el flujo se verificó en un emulador con el perfil del Samsung Galaxy A05 (Android 13, 2 GB de RAM), con el Wi-Fi y los datos móviles desactivados. Una prueba instrumentada dibuja una página con texto en castellano y confirma que ML Kit la lee sin conexión. La prueba manual de la cámara reveló dos problemas que se corrigieron. Primero, la vista previa podía quedar en negro porque PreviewView usa por defecto un SurfaceView, que se dibuja detrás de la ventana y queda tapado por el fondo de la pantalla; se cambió al modo compatible (TextureView). Segundo, la cámara virtual del emulador entrega fotogramas con marcas de tiempo inválidas y la captura nunca termina; aunque es un defecto del emulador, evidenció que la pantalla no daba respuesta al tocar el disparador, por lo que se añadió el mensaje «Tomando la foto…» y el tiempo máximo de la Tabla 3.14. Con la cámara emulada estándar el flujo completo funcionó: captura, OCR y aviso de texto no encontrado. Queda pendiente la prueba con una página real en un dispositivo físico.'))
 
 B.append(heading('Pruebas'))
-B.append(para('Las pruebas automatizadas se ejecutan en la máquina virtual de Java mediante Robolectric (Robolectric, s. f.), sin necesidad de emulador. Además, Roborazzi (Menju, s. f.) genera capturas de las pantallas en formato PNG con el perfil de una tableta de 8 pulgadas, lo que permite revisar la interfaz en cada iteración. La Tabla 3.13 resume las 68 pruebas implementadas (67 en la JVM y una instrumentada en el emulador), todas con resultado satisfactorio.'))
+B.append(para('Las pruebas automatizadas se ejecutan en la máquina virtual de Java mediante Robolectric (Robolectric, s. f.), sin necesidad de emulador. Además, Roborazzi (Menju, s. f.) genera capturas de las pantallas en formato PNG con el perfil de una tableta de 8 pulgadas, lo que permite revisar la interfaz en cada iteración. La Tabla 3.13 resume las 80 pruebas implementadas (79 en la JVM y una instrumentada en el emulador), todas con resultado satisfactorio.'))
 B.append(caption('Tabla 3.13', 'Pruebas automatizadas implementadas'))
 B.append(table([3600, 4160, 1600], ['Prueba', 'Qué verifica', 'Requisito'], [
     ['Persistencia del embedding', 'El vector guardado en Room se recupera sin pérdida.', 'RF02'],
@@ -335,17 +387,24 @@ B.append(table([3600, 4160, 1600], ['Prueba', 'Qué verifica', 'Requisito'], [
     ['Preferencias (3 pruebas)', 'Los valores por defecto, que todas las preferencias se guarden y se lean, y que un nombre vacío no se guarde.', '—'],
     ['Flujo de bienvenida', 'De extremo a extremo: el nombre del primer uso aparece en Inicio y en Ajustes, y el cambio de variante se guarda.', 'RF05'],
     ['Formato del chat (2 pruebas)', 'El texto de la fuente («libro · pág. N» o «págs. N y M») y el título tomado de la primera pregunta.', 'RF03'],
-    ['Flujo RAG', 'De extremo a extremo: con una página guardada, la consulta desde la biblioteca recibe una respuesta que cita la página y muestra la fuente.', 'RF02, RF03'],
+    ['Flujo RAG', 'De extremo a extremo: con una página guardada, se abre el libro desde la biblioteca, se pregunta, la respuesta cita la página y la cita abre su texto completo.', 'RF02, RF03'],
+    ['Reconstrucción de páginas (2 pruebas)', 'Que al unir los fragmentos se recupere el texto original sin repetir la oración compartida.', 'RF02'],
+    ['Gestión de datos (3 pruebas)', 'Borrar una página actualiza el conteo; renombrar y borrar un libro conserva sus conversaciones; «Deshacer» restaura una conversación con sus mensajes y fuentes.', 'RF02, RF03'],
+    ['Aviso de reemplazo', 'Que el aviso aparezca solo si la página ya existe en el libro elegido.', 'RF02'],
     ['OCR sin conexión (instrumentada)', 'En el emulador sin red, ML Kit lee una página con texto en castellano.', 'RF01, RNF01'],
-    ['Capturas de pantalla (26)', 'El renderizado de la navegación, Inicio, Biblioteca, la lista del tutor, los estados del chat (incluida la variante chanka), el escaneo, la revisión, los Ajustes (normal y con texto muy grande) y la bienvenida.', '—'],
+    ['Capturas de pantalla (32)', 'El renderizado de la navegación, Inicio, Biblioteca, la lista del tutor, los estados del chat (incluida la variante chanka), el escaneo, la revisión (incluido el aviso de reemplazo), el detalle de libro, los Ajustes (normal y con texto muy grande), la bienvenida y tres pantallas en tableta horizontal.', '—'],
 ]))
 B.append(note('Elaboración propia.'))
 
 # Referencias ----------------------------------------------------------
 B.append(heading('Referencias'))
 B.append(reference('Android Developers. (s. f.). *Save data in a local database using Room*. Recuperado el 31 de octubre de 2026, de https://developer.android.com/training/data-storage/room'))
+B.append(reference('Google. (s. f.). *Material Design 3*. Recuperado el 12 de noviembre de 2026, de https://m3.material.io/'))
 B.append(reference('Lexend. (s. f.). *Lexend: A variable font designed to improve reading proficiency*. Recuperado el 11 de noviembre de 2026, de https://www.lexend.com/'))
 B.append(reference('Menju, T. (s. f.). *Roborazzi* [Software]. GitHub. Recuperado el 31 de octubre de 2026, de https://github.com/takahirom/roborazzi'))
+B.append(reference('Nielsen, J. (1994a). Enhancing the explanatory power of usability heuristics. En *Proceedings of the SIGCHI Conference on Human Factors in Computing Systems* (pp. 152–158). ACM. https://doi.org/10.1145/191666.191729'))
+B.append(reference('Nielsen, J. (1994b). *Severity ratings for usability problems*. Nielsen Norman Group. https://www.nngroup.com/articles/how-to-rate-the-severity-of-usability-problems/'))
+B.append(reference('Nielsen, J., & Landauer, T. K. (1993). A mathematical model of the finding of usability problems. En *Proceedings of the INTERACT ’93 and CHI ’93 Conference on Human Factors in Computing Systems* (pp. 206–213). ACM. https://doi.org/10.1145/169059.169166'))
 B.append(reference('Robolectric. (s. f.). *Robolectric*. Recuperado el 31 de octubre de 2026, de https://robolectric.org/'))
 B.append(reference('World Wide Web Consortium. (2018). *Web Content Accessibility Guidelines (WCAG) 2.1*. https://www.w3.org/TR/WCAG21/'))
 
