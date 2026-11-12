@@ -68,6 +68,9 @@ import pe.edu.unmsm.yachaytext.ui.theme.Ink
 import pe.edu.unmsm.yachaytext.ui.theme.Mist
 import pe.edu.unmsm.yachaytext.ui.theme.Paper
 import pe.edu.unmsm.yachaytext.ui.theme.TextSecondary
+import pe.edu.unmsm.yachaytext.ui.theme.Brand
+import pe.edu.unmsm.yachaytext.ui.theme.BrandSoft
+import pe.edu.unmsm.yachaytext.ui.theme.Linen
 
 data class LibroOpcion(val id: Long, val titulo: String)
 
@@ -200,7 +203,7 @@ data class AccionesRevision(
 
 @Composable
 fun RevisionScreen(estado: RevisionUiState, acciones: AccionesRevision) {
-    Box(Modifier.fillMaxSize().background(Paper).safeDrawingPadding(), contentAlignment = Alignment.TopCenter) {
+    Box(Modifier.fillMaxSize().background(Linen).safeDrawingPadding(), contentAlignment = Alignment.TopCenter) {
         Column(Modifier.widthIn(max = 720.dp).fillMaxSize()) {
             Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 20.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (estado.fase !is FaseRevision.Indexando) {
@@ -275,7 +278,7 @@ private fun Indexando(fase: FaseRevision.Indexando) {
         Text("Preparando la página para Yachay…", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
         Spacer(Modifier.height(20.dp))
         val avance = if (fase.total == 0) 0f else fase.hechos.toFloat() / fase.total
-        LinearProgressIndicator(progress = { avance }, modifier = Modifier.fillMaxWidth(0.7f).height(8.dp), color = Ink, trackColor = Mist)
+        LinearProgressIndicator(progress = { avance }, modifier = Modifier.fillMaxWidth(0.7f).height(8.dp), color = Brand, trackColor = BrandSoft)
         Spacer(Modifier.height(12.dp))
         Text(
             if (fase.total == 0) "Dividiendo el texto en partes" else "Parte ${fase.hechos} de ${fase.total}",
@@ -288,7 +291,7 @@ private fun Indexando(fase: FaseRevision.Indexando) {
 @Composable
 private fun Listo(fase: FaseRevision.Listo, acciones: AccionesRevision) {
     Column(Modifier.fillMaxSize().padding(32.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = Ink, modifier = Modifier.size(72.dp))
+        Icon(Icons.Outlined.CheckCircle, contentDescription = null, tint = Brand, modifier = Modifier.size(72.dp))
         Spacer(Modifier.height(16.dp))
         Text("Página guardada", style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(8.dp))

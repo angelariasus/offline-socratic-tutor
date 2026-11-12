@@ -61,6 +61,8 @@ import pe.edu.unmsm.yachaytext.ui.theme.Ink
 import pe.edu.unmsm.yachaytext.ui.theme.Mist
 import pe.edu.unmsm.yachaytext.ui.theme.Paper
 import pe.edu.unmsm.yachaytext.ui.theme.TextSecondary
+import pe.edu.unmsm.yachaytext.ui.theme.Brand
+import pe.edu.unmsm.yachaytext.ui.theme.Linen
 
 data class BibliotecaUiState(
     val libros: List<LibroUi> = emptyList(),
@@ -119,7 +121,7 @@ fun BibliotecaScreen(
     onAbrirLibro: (Long) -> Unit,
     ahora: Long = System.currentTimeMillis(),
 ) {
-    Box(Modifier.fillMaxSize().background(Paper).statusBarsPadding(), contentAlignment = Alignment.TopCenter) {
+    Box(Modifier.fillMaxSize().background(Linen).statusBarsPadding(), contentAlignment = Alignment.TopCenter) {
         Column(Modifier.widthIn(max = 720.dp).fillMaxSize()) {
             Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 20.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("Biblioteca", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
@@ -176,7 +178,7 @@ private fun Buscador(texto: String, onCambio: (String) -> Unit, modifier: Modifi
                 onValueChange = onCambio,
                 singleLine = true,
                 textStyle = MaterialTheme.typography.bodyLarge.copy(color = Ink),
-                cursorBrush = SolidColor(Ink),
+                cursorBrush = SolidColor(Brand),
                 modifier = Modifier.weight(1f),
                 decorationBox = { campo ->
                     if (texto.isEmpty()) Text("Buscar libro o área", style = MaterialTheme.typography.bodyLarge, color = TextSecondary)

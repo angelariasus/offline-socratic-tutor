@@ -30,8 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -56,10 +55,12 @@ import pe.edu.unmsm.yachaytext.ui.common.TarjetaConversacion
 import pe.edu.unmsm.yachaytext.ui.common.TarjetaLibro
 import pe.edu.unmsm.yachaytext.ui.common.TituloSeccion
 import pe.edu.unmsm.yachaytext.ui.common.tiempoRelativo
-import pe.edu.unmsm.yachaytext.ui.theme.Ink
 import pe.edu.unmsm.yachaytext.ui.theme.Mist
+import pe.edu.unmsm.yachaytext.ui.common.PaisajeAndino
 import pe.edu.unmsm.yachaytext.ui.theme.Paper
 import pe.edu.unmsm.yachaytext.ui.theme.TextSecondary
+import pe.edu.unmsm.yachaytext.ui.theme.Brand
+import pe.edu.unmsm.yachaytext.ui.theme.Linen
 
 data class ConversacionReciente(val id: Long, val titulo: String, val fechaInicio: Long)
 
@@ -129,7 +130,7 @@ fun InicioScreen(
     onAbrirLibro: (Long) -> Unit,
     ahora: Long = System.currentTimeMillis(),
 ) {
-    Box(Modifier.fillMaxSize().background(Paper).statusBarsPadding(), contentAlignment = Alignment.TopCenter) {
+    Box(Modifier.fillMaxSize().background(Linen).statusBarsPadding(), contentAlignment = Alignment.TopCenter) {
         LazyColumn(
             modifier = Modifier.widthIn(max = 720.dp).fillMaxSize(),
             contentPadding = PaddingValues(20.dp),
@@ -173,16 +174,16 @@ private fun Saludo(nombre: String?) {
         Modifier
             .fillMaxWidth()
             .height(200.dp)
-            .background(Brush.linearGradient(listOf(Color(0xFFDCDCDC), Mist)), RoundedCornerShape(40.dp))
-            .padding(28.dp),
-        contentAlignment = Alignment.BottomStart,
+            .clip(RoundedCornerShape(32.dp))
+            .background(Brand),
     ) {
-        Column {
-            Text(if (nombre != null) "Hola," else "Hola", style = MaterialTheme.typography.titleLarge, color = Ink)
+        PaisajeAndino()
+        Column(Modifier.align(Alignment.BottomStart).padding(28.dp)) {
+            Text(if (nombre != null) "Hola," else "Hola", style = MaterialTheme.typography.titleLarge, color = Paper)
             Text(
                 nombre ?: "¿Qué aprendemos hoy?",
                 style = MaterialTheme.typography.displaySmall,
-                color = Ink,
+                color = Paper,
             )
         }
     }
@@ -202,7 +203,7 @@ private fun Acciones(onPreguntar: () -> Unit, onEscanear: () -> Unit) {
             }
         }
         Spacer(Modifier.width(12.dp))
-        Surface(onClick = onEscanear, color = Ink, shape = CircleShape, modifier = Modifier.size(72.dp)) {
+        Surface(onClick = onEscanear, color = Brand, shape = CircleShape, modifier = Modifier.size(72.dp)) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(Icons.Outlined.CameraAlt, contentDescription = "Escanear página", tint = Paper, modifier = Modifier.size(30.dp))
             }

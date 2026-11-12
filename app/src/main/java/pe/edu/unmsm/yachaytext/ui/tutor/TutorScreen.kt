@@ -49,6 +49,7 @@ import pe.edu.unmsm.yachaytext.domain.tutor.IniciarConsulta
 import pe.edu.unmsm.yachaytext.ui.theme.Line
 import pe.edu.unmsm.yachaytext.ui.theme.Paper
 import pe.edu.unmsm.yachaytext.ui.theme.TextSecondary
+import pe.edu.unmsm.yachaytext.ui.theme.Linen
 
 data class ConversacionResumen(val id: Long, val titulo: String)
 
@@ -80,7 +81,7 @@ fun TutorRoute(onAbrirChat: (Long) -> Unit, viewModel: TutorViewModel = viewMode
 
 @Composable
 fun TutorScreen(conversaciones: List<ConversacionResumen>, onAbrirChat: (Long) -> Unit, onNueva: () -> Unit) {
-    Box(Modifier.fillMaxSize().background(Paper).statusBarsPadding(), contentAlignment = Alignment.TopCenter) {
+    Box(Modifier.fillMaxSize().background(Linen).statusBarsPadding(), contentAlignment = Alignment.TopCenter) {
         LazyColumn(
             modifier = Modifier.widthIn(max = 720.dp).fillMaxSize(),
             contentPadding = PaddingValues(20.dp),

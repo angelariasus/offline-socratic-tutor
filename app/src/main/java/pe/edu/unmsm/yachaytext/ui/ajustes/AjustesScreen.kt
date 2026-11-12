@@ -61,6 +61,8 @@ import pe.edu.unmsm.yachaytext.ui.theme.Mist
 import pe.edu.unmsm.yachaytext.ui.theme.Paper
 import pe.edu.unmsm.yachaytext.ui.theme.Quechua
 import pe.edu.unmsm.yachaytext.ui.theme.TextSecondary
+import pe.edu.unmsm.yachaytext.ui.theme.Brand
+import pe.edu.unmsm.yachaytext.ui.theme.Linen
 
 data class AjustesUiState(val preferencias: Preferencias = Preferencias(), val nombre: String = "")
 
@@ -136,7 +138,7 @@ fun AjustesRoute(viewModel: AjustesViewModel = viewModel(factory = AjustesViewMo
 @Composable
 fun AjustesScreen(estado: AjustesUiState, acciones: AccionesAjustes) {
     val p = estado.preferencias
-    Box(Modifier.fillMaxSize().background(Paper).statusBarsPadding(), contentAlignment = Alignment.TopCenter) {
+    Box(Modifier.fillMaxSize().background(Linen).statusBarsPadding(), contentAlignment = Alignment.TopCenter) {
         Column(
             Modifier.widthIn(max = 720.dp).fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -205,7 +207,7 @@ fun AjustesScreen(estado: AjustesUiState, acciones: AccionesAjustes) {
 @Composable
 private fun Cabecera(nombre: String, grado: String?) {
     Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Surface(color = Ink, shape = CircleShape, modifier = Modifier.size(64.dp)) {
+        Surface(color = Brand, shape = CircleShape, modifier = Modifier.size(64.dp)) {
             Box(contentAlignment = Alignment.Center) {
                 Text(nombre.trim().firstOrNull()?.uppercase() ?: "Y", style = MaterialTheme.typography.headlineSmall, color = Paper)
             }

@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Ícono provisional: libro abierto. Reemplazar por el logo final. -->
+<!-- Logo de Yachay: libro abierto con el sol saliendo detrás. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M54,40C48,35 40,34 32,35L32,70C40,69 48,70 54,75C60,70 68,69 76,70L76,35C68,34 60,35 54,40ZM52,70.5C47,67.5 41,66.5 35,67L35,38C41,37.5 47,38.5 52,42ZM73,67C67,66.5 61,67.5 56,70.5L56,42C61,38.5 67,37.5 73,38Z" />
+    <path android:fillColor="@color/sol" android:pathData="M54,38m-10,0a10,10 0,1 1,20 0a10,10 0,1 1,-20 0" />
+    <path android:strokeColor="@color/sol" android:strokeWidth="2.6" android:strokeLineCap="round" android:pathData="M42.31,31.25L39.71,29.75M47.25,26.31L45.75,23.71M54,24.5L54,21.5M60.75,26.31L62.25,23.71M65.69,31.25L68.29,29.75" />
+    <group android:translateY="6">
+        <path android:fillColor="@color/marca" android:pathData="M54,40C48,35 40,34 32,35L32,70C40,69 48,70 54,75C60,70 68,69 76,70L76,35C68,34 60,35 54,40Z" />
+        <path android:fillColor="#FFFFFF" android:pathData="M54,40C48,35 40,34 32,35L32,70C40,69 48,70 54,75C60,70 68,69 76,70L76,35C68,34 60,35 54,40ZM52,70.5C47,67.5 41,66.5 35,67L35,38C41,37.5 47,38.5 52,42ZM73,67C67,66.5 61,67.5 56,70.5L56,42C61,38.5 67,37.5 73,38Z" />
+    </group>
 </vector>

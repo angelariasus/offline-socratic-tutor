@@ -42,6 +42,8 @@ import pe.edu.unmsm.yachaytext.ui.common.ChipSeleccion
 import pe.edu.unmsm.yachaytext.ui.theme.Ink
 import pe.edu.unmsm.yachaytext.ui.theme.Paper
 import pe.edu.unmsm.yachaytext.ui.theme.TextSecondary
+import pe.edu.unmsm.yachaytext.ui.theme.Linen
+import pe.edu.unmsm.yachaytext.ui.common.LogoYachay
 
 /** Primer uso: registra el perfil local (nombre y grado). Se puede omitir y completar luego en Ajustes. */
 @Composable
@@ -68,16 +70,12 @@ fun BienvenidaScreen(
     onEmpezar: () -> Unit,
     onOmitir: () -> Unit,
 ) {
-    Box(Modifier.fillMaxSize().background(Paper).safeDrawingPadding(), contentAlignment = Alignment.TopCenter) {
+    Box(Modifier.fillMaxSize().background(Linen).safeDrawingPadding(), contentAlignment = Alignment.TopCenter) {
         Column(
             Modifier.widthIn(max = 600.dp).fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Surface(color = Ink, shape = CircleShape, modifier = Modifier.size(88.dp)) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(Icons.AutoMirrored.Outlined.MenuBook, contentDescription = null, tint = Paper, modifier = Modifier.size(44.dp))
-                }
-            }
+            LogoYachay()
             Spacer(Modifier.height(24.dp))
             Text("Hola, soy Yachay", style = MaterialTheme.typography.displaySmall, textAlign = TextAlign.Center)
             Spacer(Modifier.height(8.dp))

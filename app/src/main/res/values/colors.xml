@@ -1,0 +1,6 @@
+<resources>
+    <!-- Deben coincidir con ui/theme/Color.kt -->
+    <color name="marca">#1E6B52</color>
+    <color name="sol">#F2B544</color>
+    <color name="fondo">#FAF7F2</color>
+</resources>

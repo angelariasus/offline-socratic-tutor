@@ -121,6 +121,7 @@ private fun BarraInferior(navController: NavHostController, currentRoute: String
                 label = { Text(destination.label) },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = Paper,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
                     indicatorColor = MaterialTheme.colorScheme.primary,
                 ),
             )

@@ -80,6 +80,7 @@ import pe.edu.unmsm.yachaytext.data.ocr.LectorTexto
 import pe.edu.unmsm.yachaytext.domain.ingesta.BorradorEscaneo
 import pe.edu.unmsm.yachaytext.ui.common.EstadoVacio
 import pe.edu.unmsm.yachaytext.ui.theme.Paper
+import pe.edu.unmsm.yachaytext.ui.theme.Linen
 
 enum class EtapaEscaneo(val mensaje: String) {
     Tomando("Tomando la foto…"),
@@ -211,7 +212,7 @@ fun EscaneoScreen(
     vistaPrevia: @Composable () -> Unit,
 ) {
     if (!permisoConcedido) {
-        Column(Modifier.fillMaxSize().background(Paper).safeDrawingPadding()) {
+        Column(Modifier.fillMaxSize().background(Linen).safeDrawingPadding()) {
             IconButton(onClick = onVolver, modifier = Modifier.padding(4.dp)) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
             }

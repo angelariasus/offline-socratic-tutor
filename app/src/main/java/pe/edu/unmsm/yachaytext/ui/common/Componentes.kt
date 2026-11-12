@@ -39,6 +39,8 @@ import pe.edu.unmsm.yachaytext.ui.theme.Line
 import pe.edu.unmsm.yachaytext.ui.theme.Mist
 import pe.edu.unmsm.yachaytext.ui.theme.Paper
 import pe.edu.unmsm.yachaytext.ui.theme.TextSecondary
+import pe.edu.unmsm.yachaytext.ui.theme.Brand
+import pe.edu.unmsm.yachaytext.ui.theme.BrandSoft
 
 @Composable
 fun TituloSeccion(texto: String, modifier: Modifier = Modifier) {
@@ -55,9 +57,9 @@ fun TarjetaLibro(libro: LibroUi, ahora: Long, onClick: () -> Unit) {
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Surface(color = Mist, shape = RoundedCornerShape(14.dp), modifier = Modifier.size(88.dp)) {
+            Surface(color = BrandSoft, shape = RoundedCornerShape(14.dp), modifier = Modifier.size(88.dp)) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(Icons.AutoMirrored.Outlined.MenuBook, contentDescription = null, tint = Ink, modifier = Modifier.size(36.dp))
+                    Icon(Icons.AutoMirrored.Outlined.MenuBook, contentDescription = null, tint = Brand, modifier = Modifier.size(36.dp))
                 }
             }
             Spacer(Modifier.width(16.dp))
@@ -99,8 +101,8 @@ fun TarjetaConversacion(titulo: String, detalle: String, onClick: () -> Unit) {
 @Composable
 fun EstadoVacio(icono: ImageVector, titulo: String, texto: String, accion: String, onAccion: () -> Unit, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxWidth().padding(vertical = 32.dp, horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Surface(color = Mist, shape = RoundedCornerShape(28.dp), modifier = Modifier.size(96.dp)) {
-            Box(contentAlignment = Alignment.Center) { Icon(icono, contentDescription = null, tint = Ink, modifier = Modifier.size(44.dp)) }
+        Surface(color = BrandSoft, shape = RoundedCornerShape(28.dp), modifier = Modifier.size(96.dp)) {
+            Box(contentAlignment = Alignment.Center) { Icon(icono, contentDescription = null, tint = Brand, modifier = Modifier.size(44.dp)) }
         }
         Spacer(Modifier.height(20.dp))
         Text(titulo, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
@@ -119,7 +121,7 @@ fun BotonPrincipal(
     modifier: Modifier = Modifier,
     habilitado: Boolean = true,
 ) {
-    val fondo = if (habilitado) Ink else Line
+    val fondo = if (habilitado) Brand else Line
     val contenido = if (habilitado) Paper else TextDisabled
     Surface(onClick = onClick, enabled = habilitado, shape = RoundedCornerShape(50), color = fondo, modifier = modifier.height(56.dp)) {
         Row(Modifier.padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
@@ -150,7 +152,7 @@ fun ChipSeleccion(texto: String, activo: Boolean, onClick: () -> Unit, icono: Im
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(50),
-        color = if (activo) Ink else Paper,
+        color = if (activo) Brand else Paper,
         border = if (activo) null else BorderStroke(1.dp, Line),
         modifier = Modifier.height(44.dp),
     ) {
@@ -182,7 +184,7 @@ fun CampoTexto(
             singleLine = unaLinea,
             keyboardOptions = teclado,
             textStyle = MaterialTheme.typography.bodyLarge.copy(color = Ink),
-            cursorBrush = SolidColor(Ink),
+            cursorBrush = SolidColor(Brand),
             modifier = Modifier.fillMaxWidth().heightIn(min = alturaMinima).padding(horizontal = 20.dp, vertical = 16.dp),
             decorationBox = { campo ->
                 if (valor.isEmpty()) Text(placeholder, style = MaterialTheme.typography.bodyLarge, color = TextSecondary)

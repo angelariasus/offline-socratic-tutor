@@ -79,6 +79,8 @@ import pe.edu.unmsm.yachaytext.ui.theme.QuechuaContainer
 import pe.edu.unmsm.yachaytext.ui.theme.TextDisabled
 import pe.edu.unmsm.yachaytext.ui.theme.TextSecondary
 import pe.edu.unmsm.yachaytext.ui.theme.YachayTheme
+import pe.edu.unmsm.yachaytext.ui.theme.Brand
+import pe.edu.unmsm.yachaytext.ui.theme.Linen
 
 private val AnchoMaximo = 720.dp
 
@@ -116,7 +118,7 @@ fun ChatScreen(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Paper)
+            .background(Linen)
             .safeDrawingPadding(),
         contentAlignment = Alignment.TopCenter,
     ) {
@@ -241,7 +243,7 @@ private fun Pensando() {
                 animationSpec = infiniteRepeatable(tween(600, delayMillis = i * 200), RepeatMode.Reverse),
                 label = "punto$i",
             )
-            Box(Modifier.padding(end = 6.dp).size(10.dp).alpha(alfa).background(Ink, CircleShape))
+            Box(Modifier.padding(end = 6.dp).size(10.dp).alpha(alfa).background(Brand, CircleShape))
         }
         Spacer(Modifier.width(6.dp))
         Text("Yachay está pensando…", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
@@ -295,7 +297,7 @@ private fun Compositor(
                     onValueChange = onCambiarEntrada,
                     modifier = Modifier.fillMaxWidth().padding(end = 8.dp).height(52.dp),
                     textStyle = MaterialTheme.typography.bodyLarge.copy(color = Ink),
-                    cursorBrush = SolidColor(Ink),
+                    cursorBrush = SolidColor(Brand),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(onSend = { if (estado.puedeEnviar) onEnviar() }),
                     decorationBox = { campo ->
@@ -327,7 +329,7 @@ private fun Compositor(
                 BotonCircular(
                     icono = Icons.Filled.ArrowUpward,
                     descripcion = "Enviar",
-                    fondo = if (estado.puedeEnviar) Ink else Line,
+                    fondo = if (estado.puedeEnviar) Brand else Line,
                     tinte = if (estado.puedeEnviar) Paper else TextDisabled,
                     borde = false,
                     habilitado = estado.puedeEnviar,
