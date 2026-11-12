@@ -124,12 +124,16 @@ mosaico([("Respuesta con la fuente citada", "flujo_rag")], "fig3_12_rag.png")
 # ---------- Figura 3.13: Ajustes y bienvenida ----------
 mosaico([("Ajustes", "ajustes"), ("Texto muy grande", "ajustes_texto_muy_grande"), ("Bienvenida", "bienvenida_completa")],
         "fig3_13_ajustes.png")
-# ---------- Figura 3.14: identidad visual (antes y después) ----------
-mosaico([("Antes (Sprint 2)", f"{OUT_DIR}/antes_inicio.png"), ("Después", "inicio_con_datos"), ("Logo en la bienvenida", "bienvenida_completa")],
-        "fig3_14_identidad.png")
+# Figura 3.14 (identidad visual): se conserva la imagen generada el 11/11/2026, porque
+# muestra Inicio antes del rediseño de la estructura.
 # ---------- Figuras 3.15 y 3.16: evaluación heurística ----------
 mosaico([("Detalle de libro", "libro_detalle"), ("Aviso de reemplazo", "revision_reemplaza"), ("Conversaciones", "tutor_lista")],
         "fig3_15_heuristica.png")
 mosaico([("Biblioteca en cuadrícula", "biblioteca_horizontal"), ("Revisión en dos columnas", "revision_horizontal")],
         "fig3_16_horizontal.png")
+# ---------- Figuras 3.17 y 3.18: rediseño de la estructura y navegación ----------
+mosaico([("Inicio antes", f"{OUT_DIR}/antes_estructura_inicio_con_datos.png"), ("Inicio después", "inicio_con_datos"),
+         ("Biblioteca antes", f"{OUT_DIR}/antes_estructura_biblioteca_con_libros.png"), ("Biblioteca después", "biblioteca_con_libros")],
+        "fig3_17_estructura.png")
+mosaico([("Barra flotante (vertical)", "app_shell"), ("Riel lateral (horizontal)", "app_shell_horizontal")], "fig3_18_navegacion.png")
 print("ok")

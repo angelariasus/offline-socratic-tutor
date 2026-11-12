@@ -295,7 +295,7 @@ B.append(note('Elaboración propia. Capturas generadas con Roborazzi. La segunda
 
 B.append(heading('Identidad visual'))
 B.append(para('Las pantallas del Sprint 2 conservaban el estilo monocromo del prototipo, que funcionaba como boceto pero resultaba frío para estudiantes de primaria y no tenía elementos reconocibles. Al inicio del Sprint 3 se definió una identidad visual con tres decisiones. Primero, una paleta inspirada en el paisaje andino: el verde de los andenes para las acciones principales y la selección, el amarillo del sol solo como decoración, un fondo de tono papel y un tono tierra reservado para los términos en quechua, de modo que no se confundan con las acciones (Tabla 3.16). Todos los pares de texto y fondo superan la relación de contraste de 4,5:1 del nivel AA de las WCAG 2.1 (W3C, 2018).'))
-B.append(para('Segundo, la tipografía Lexend, diseñada con el propósito de facilitar la lectura (Lexend, s. f.) y distribuida bajo la licencia SIL Open Font License. Se empaqueta dentro del APK en tres pesos (unos 230 KB en total), porque las fuentes descargables requieren conexión a internet (RNF01). Tercero, un logo que representa un libro abierto con el sol saliendo detrás, en referencia a «yachay» (saber, aprender); el mismo dibujo se usa como ícono adaptativo de la aplicación, con una versión monocroma para los íconos temáticos de Android, y en la pantalla de bienvenida. La portada de Inicio muestra un paisaje con sol, cerros y andenes que se dibuja con código, por lo que no añade imágenes al APK y se adapta a cualquier ancho de pantalla (Figura 3.14).'))
+B.append(para('Segundo, la tipografía Lexend, diseñada con el propósito de facilitar la lectura (Lexend, s. f.) y distribuida bajo la licencia SIL Open Font License. Se empaqueta dentro del APK en tres pesos (unos 230 KB en total), porque las fuentes descargables requieren conexión a internet (RNF01). Tercero, un logo que representa un libro abierto con el sol saliendo detrás, en referencia a «yachay» (saber, aprender); el mismo dibujo se usa como ícono adaptativo de la aplicación, con una versión monocroma para los íconos temáticos de Android, y en la pantalla de bienvenida. En esta etapa, la portada de Inicio mostraba además un paisaje con sol, cerros y andenes dibujado con código (Figura 3.14), que se retiró en el rediseño de la estructura por recargar la pantalla.'))
 B.append(caption('Tabla 3.16', 'Paleta de colores de la aplicación'))
 B.append(table([2000, 1300, 3860, 2200], ['Color', 'Código', 'Uso', 'Contraste'], [
     ['Verde andén', '#1E6B52', 'Botones principales, chips y pestaña seleccionados, logo.', '6,4:1 con texto blanco'],
@@ -309,7 +309,7 @@ B.append(table([2000, 1300, 3860, 2200], ['Color', 'Código', 'Uso', 'Contraste'
 B.append(note('Elaboración propia. Contrastes calculados con la fórmula de luminancia relativa de las WCAG 2.1.'))
 B.append(caption('Figura 3.14', 'Pantalla de Inicio antes y después de la identidad visual'))
 B.append(figure(f'{IMG_DIR}/fig3_14_identidad.png', 6.2, 108))
-B.append(note('Elaboración propia. Capturas generadas con Roborazzi. Las demás figuras de este documento ya muestran la identidad visual.'))
+B.append(note('Elaboración propia. Capturas generadas con Roborazzi. Las figuras 3.9 a 3.13, 3.15 y 3.16 muestran la estructura rediseñada que se describe más adelante.'))
 
 B.append(heading('Evaluación heurística'))
 B.append(para('Con el flujo del estudiante completo, se realizó una evaluación heurística experta de la interfaz con las diez heurísticas de usabilidad de Nielsen (1994a), clasificando cada problema con su escala de severidad de 0 (no es un problema) a 4 (catástrofe de usabilidad) (Nielsen, 1994b). Se revisaron las capturas de todas las pantallas y estados, el código de cada pantalla y los 38 íconos usados, y se contrastaron con las pautas de Material Design 3 (Google, s. f.). No se hallaron problemas de severidad 4. La Tabla 3.17 resume los problemas y su corrección; las heurísticas 7 (flexibilidad y eficiencia) y 9 (recuperación de errores) se cumplían, gracias a los atajos del chat, el dictado y los mensajes de error que explican la causa y la solución.'))
@@ -365,11 +365,34 @@ B.append(table([800, 5000, 3560], ['N.º', 'Tarea', 'Criterio de éxito'], [
 ]))
 B.append(note('Elaboración propia. Se medirán la tasa de éxito, el tiempo por tarea y los comentarios de los estudiantes.'))
 
+B.append(heading('Rediseño de la estructura'))
+B.append(para('Con la identidad visual y las correcciones heurísticas, las pantallas eran claras pero no tenían forma: todas repetían la misma pieza (una tarjeta blanca con borde gris, una debajo de otra), con un espaciado uniforme de 12 dp, sin un elemento protagonista y con libros que se veían como filas con un ícono. El rediseño atacó esas causas con cinco decisiones. Primero, cada pantalla tiene un ancla: en Inicio, una portada verde que reúne el saludo y las dos acciones principales; en Ajustes, el perfil con el mismo tratamiento; y en el detalle de libro, una cabecera con el color de su área. Segundo, los libros se muestran como portadas verticales de proporción 3:4, con lomo y sombra, dibujadas con código en el color y con el ícono de su área (Tabla 3.20), en un carrusel en Inicio y en una cuadrícula en la Biblioteca. Tercero, los bordes se reemplazan por superficies de distinto tono y sombras suaves, y las listas se agrupan en bloques (por ejemplo, las conversaciones del Tutor en «Hoy», «Esta semana» y «Antes»). Cuarto, el espaciado sigue una escala con ritmo (8, 16, 24 y 40 dp) que separa con intención lo que no está relacionado. Quinto, la conversación más reciente se destaca en una tarjeta grande con la portada de su libro (Figura 3.17).'))
+B.append(caption('Tabla 3.20', 'Colores de las áreas curriculares en las portadas'))
+B.append(table([3600, 1700, 1700, 2360], ['Área', 'Fondo', 'Tinta', 'Contraste'], [
+    ['Comunicación', '#FBE3CF', '#8F4310', '5,7:1'],
+    ['Matemática', '#DCE8F7', '#24548F', '6,2:1'],
+    ['Ciencia y Tecnología', '#DCEFE4', '#1E6B52', '5,3:1'],
+    ['Personal Social y Ciencias Sociales', '#D7ECEF', '#1D5F68', '5,9:1'],
+    ['Desarrollo Personal, Ciudadanía y Cívica', '#E9E0F3', '#5B3E8A', '6,6:1'],
+    ['Arte y Cultura', '#F7DDE3', '#93294A', '6,2:1'],
+    ['Educación Religiosa', '#F6EBC8', '#6E5108', '6,2:1'],
+    ['Educación para el Trabajo', '#EEDFD3', '#6A432D', '6,6:1'],
+]))
+B.append(note('Elaboración propia. La tinta se usa en el ícono de la portada y en el nombre del área; todos los pares superan el mínimo de 4,5:1 de las WCAG 2.1.'))
+B.append(caption('Figura 3.17', 'Inicio y Biblioteca antes y después del rediseño de la estructura'))
+B.append(figure(f'{IMG_DIR}/fig3_17_estructura.png', 6.2, 111))
+B.append(note('Elaboración propia. Capturas generadas con Roborazzi.'))
+B.append(para('La navegación también se rediseñó. En el teléfono y en la tableta en vertical, la barra inferior estándar se reemplazó por una barra flotante, separada de los bordes, con el ícono relleno en la pestaña activa y de contorno en las demás, y con las etiquetas siempre visibles. En pantallas de 840 dp o más (la tableta en horizontal), la navegación pasa a un riel lateral, como recomienda Material Design para ventanas anchas (Google, s. f.), para no quitar altura al contenido (Figura 3.18). El cambio entre ambas es automático según el ancho disponible.'))
+B.append(para('Para el movimiento se adoptaron los principios de ingeniería de diseño de Kowalski (2026), que resumen también las charlas de diseño de Apple: todo lo que se toca responde al instante, encogiéndose un 3 % mientras se presiona; el indicador de la barra se desliza de una pestaña a otra con un resorte sin rebote, que puede interrumpirse si el estudiante toca otra pestaña; los mensajes del chat aparecen con un fundido de 220 ms; y solo se animan la escala y la opacidad, que el teléfono procesa sin recalcular la distribución. Si el estudiante activó «Quitar animaciones» en las opciones de accesibilidad de Android, el movimiento decorativo se omite. La colección de Kowalski incluye además una guía para que las aplicaciones web se sientan nativas en el teléfono, que no se aplicó porque YachayText ya es una aplicación nativa.'))
+B.append(caption('Figura 3.18', 'Navegación en vertical (barra flotante) y en horizontal (riel lateral)'))
+B.append(figure(f'{IMG_DIR}/fig3_18_navegacion.png', 6.2, 112))
+B.append(note('Elaboración propia. Capturas generadas con Roborazzi, sin datos de ejemplo.'))
+
 B.append(heading('Verificación en emulador'))
 B.append(para('Además de las pruebas en la JVM, el flujo se verificó en un emulador con el perfil del Samsung Galaxy A05 (Android 13, 2 GB de RAM), con el Wi-Fi y los datos móviles desactivados. Una prueba instrumentada dibuja una página con texto en castellano y confirma que ML Kit la lee sin conexión. La prueba manual de la cámara reveló dos problemas que se corrigieron. Primero, la vista previa podía quedar en negro porque PreviewView usa por defecto un SurfaceView, que se dibuja detrás de la ventana y queda tapado por el fondo de la pantalla; se cambió al modo compatible (TextureView). Segundo, la cámara virtual del emulador entrega fotogramas con marcas de tiempo inválidas y la captura nunca termina; aunque es un defecto del emulador, evidenció que la pantalla no daba respuesta al tocar el disparador, por lo que se añadió el mensaje «Tomando la foto…» y el tiempo máximo de la Tabla 3.14. Con la cámara emulada estándar el flujo completo funcionó: captura, OCR y aviso de texto no encontrado. Queda pendiente la prueba con una página real en un dispositivo físico.'))
 
 B.append(heading('Pruebas'))
-B.append(para('Las pruebas automatizadas se ejecutan en la máquina virtual de Java mediante Robolectric (Robolectric, s. f.), sin necesidad de emulador. Además, Roborazzi (Menju, s. f.) genera capturas de las pantallas en formato PNG con el perfil de una tableta de 8 pulgadas, lo que permite revisar la interfaz en cada iteración. La Tabla 3.13 resume las 87 pruebas implementadas (85 en la JVM y dos instrumentadas en el emulador), todas con resultado satisfactorio.'))
+B.append(para('Las pruebas automatizadas se ejecutan en la máquina virtual de Java mediante Robolectric (Robolectric, s. f.), sin necesidad de emulador. Además, Roborazzi (Menju, s. f.) genera capturas de las pantallas en formato PNG con el perfil de una tableta de 8 pulgadas, lo que permite revisar la interfaz en cada iteración. La Tabla 3.13 resume las 89 pruebas implementadas (87 en la JVM y dos instrumentadas en el emulador), todas con resultado satisfactorio.'))
 B.append(caption('Tabla 3.13', 'Pruebas automatizadas implementadas'))
 B.append(table([3600, 4160, 1600], ['Prueba', 'Qué verifica', 'Requisito'], [
     ['Persistencia del embedding', 'El vector guardado en Room se recupera sin pérdida.', 'RF02'],
@@ -394,9 +417,10 @@ B.append(table([3600, 4160, 1600], ['Prueba', 'Qué verifica', 'Requisito'], [
     ['Gestión de datos (4 pruebas)', 'Borrar una página actualiza el conteo; renombrar y borrar un libro conserva sus conversaciones; las conversaciones sin preguntas no se listan; «Deshacer» restaura una conversación con sus mensajes y fuentes.', 'RF02, RF03'],
     ['Interacciones de la interfaz (4 pruebas)', 'Borrar, deshacer y renombrar una conversación; teclado abierto y atajos ocultos tras la primera pregunta; confirmación al borrar un libro; confirmación al salir de la revisión.', 'RF02, RF03'],
     ['Aviso de reemplazo', 'Que el aviso aparezca solo si la página ya existe en el libro elegido.', 'RF02'],
+    ['Agrupación por fecha', 'Que el Tutor separe las conversaciones en «Hoy», «Esta semana» y «Antes» sin alterar su orden.', 'RF03'],
     ['OCR sin conexión (instrumentada)', 'En el emulador sin red, ML Kit lee una página con texto en castellano.', 'RF01, RNF01'],
     ['Flujo del libro (instrumentada)', 'En el emulador: detalle del libro, texto de la página, pregunta y apertura de la página citada.', 'RF02, RF03'],
-    ['Capturas de pantalla (33)', 'El renderizado de la navegación, Inicio, Biblioteca, la lista del tutor, los estados del chat (incluida la variante chanka), el escaneo, la revisión (incluido el aviso de reemplazo), el detalle de libro, los Ajustes (normal y con texto muy grande), la bienvenida y cuatro pantallas en tableta horizontal.', '—'],
+    ['Capturas de pantalla (34)', 'El renderizado de la navegación, Inicio, Biblioteca, la lista del tutor, los estados del chat (incluida la variante chanka), el escaneo, la revisión (incluido el aviso de reemplazo), el detalle de libro, los Ajustes (normal y con texto muy grande), la bienvenida y cinco pantallas en tableta horizontal, incluida la navegación con riel lateral.', '—'],
 ]))
 B.append(note('Elaboración propia.'))
 
@@ -404,6 +428,7 @@ B.append(note('Elaboración propia.'))
 B.append(heading('Referencias'))
 B.append(reference('Android Developers. (s. f.). *Save data in a local database using Room*. Recuperado el 31 de octubre de 2026, de https://developer.android.com/training/data-storage/room'))
 B.append(reference('Google. (s. f.). *Material Design 3*. Recuperado el 12 de noviembre de 2026, de https://m3.material.io/'))
+B.append(reference('Kowalski, E. (2026). *Skills* [Software]. GitHub. Recuperado el 12 de noviembre de 2026, de https://github.com/emilkowalski/skills'))
 B.append(reference('Lexend. (s. f.). *Lexend: A variable font designed to improve reading proficiency*. Recuperado el 11 de noviembre de 2026, de https://www.lexend.com/'))
 B.append(reference('Menju, T. (s. f.). *Roborazzi* [Software]. GitHub. Recuperado el 31 de octubre de 2026, de https://github.com/takahirom/roborazzi'))
 B.append(reference('Nielsen, J. (1994a). Enhancing the explanatory power of usability heuristics. En *Proceedings of the SIGCHI Conference on Human Factors in Computing Systems* (pp. 152–158). ACM. https://doi.org/10.1145/191666.191729'))
