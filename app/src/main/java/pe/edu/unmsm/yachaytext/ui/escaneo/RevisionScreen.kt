@@ -2,7 +2,9 @@ package pe.edu.unmsm.yachaytext.ui.escaneo
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -28,6 +30,7 @@ import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Forum
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -36,6 +39,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
@@ -64,6 +71,11 @@ import pe.edu.unmsm.yachaytext.ui.common.BotonPrincipal
 import pe.edu.unmsm.yachaytext.ui.common.BotonSecundario
 import pe.edu.unmsm.yachaytext.ui.common.CampoTexto
 import pe.edu.unmsm.yachaytext.ui.common.ChipSeleccion
+import pe.edu.unmsm.yachaytext.ui.common.DialogoConfirmar
+import pe.edu.unmsm.yachaytext.ui.common.EtiquetaCampo
+import pe.edu.unmsm.yachaytext.ui.common.iconoArea
+import pe.edu.unmsm.yachaytext.ui.theme.Aviso
+import pe.edu.unmsm.yachaytext.ui.theme.AvisoContainer
 import pe.edu.unmsm.yachaytext.ui.theme.Ink
 import pe.edu.unmsm.yachaytext.ui.theme.Mist
 import pe.edu.unmsm.yachaytext.ui.theme.Paper
@@ -90,7 +102,12 @@ data class RevisionUiState(
     val pagina: String = "",
     val fase: FaseRevision = FaseRevision.Editando,
     val error: String? = null,
+    /** Páginas que ya existen en el libro elegido. */
+    val paginasGuardadas: Set<Int> = emptySet(),
 ) {
+    /** Guardar reemplazaría una página existente: se avisa antes (prevención de errores). */
+    val reemplaza: Boolean get() = libroElegido != null && pagina.toIntOrNull() in paginasGuardadas
+
     val paginaValida: Boolean get() = pagina.toIntOrNull()?.let { it in 1..9999 } == true
     val puedeGuardar: Boolean
         get() = texto.isNotBlank() && paginaValida && (libroElegido != null || (tituloNuevo.isNotBlank() && areaNueva != null))
@@ -98,7 +115,7 @@ data class RevisionUiState(
 
 class RevisionViewModel(
     private val borrador: BorradorEscaneo,
-    libros: LibroRepository,
+    private val libros: LibroRepository,
     private val ingestar: IngestarPagina,
     private val iniciarConsulta: IniciarConsulta,
 ) : ViewModel() {
@@ -112,17 +129,30 @@ class RevisionViewModel(
             libros.observarLibros().collect { lista ->
                 val opciones = lista.map { LibroOpcion(it.id, it.titulo) }
                 _estado.update { e ->
-                    // La primera vez se propone el libro más reciente: lo habitual es seguir escaneando el mismo.
-                    val elegido = if (primeraVez) opciones.firstOrNull()?.id else e.libroElegido
+                    // La primera vez se propone el libro desde el que se empezó a escanear o, si no,
+                    // el más reciente: lo habitual es seguir escaneando el mismo.
+                    val preferido = borrador.libroPreferido?.takeIf { id -> opciones.any { it.id == id } }
+                    val elegido = if (primeraVez) preferido ?: opciones.firstOrNull()?.id else e.libroElegido
                     e.copy(libros = opciones, libroElegido = elegido)
                 }
+                if (primeraVez) cargarPaginas(_estado.value.libroElegido)
                 primeraVez = false
             }
         }
     }
 
+    private fun cargarPaginas(libroId: Long?) {
+        viewModelScope.launch {
+            val paginas = libroId?.let { libros.numerosDePagina(it) }.orEmpty()
+            _estado.update { if (it.libroElegido == libroId) it.copy(paginasGuardadas = paginas) else it }
+        }
+    }
+
     fun alCambiarTexto(texto: String) = _estado.update { it.copy(texto = texto) }
-    fun alElegirLibro(id: Long?) = _estado.update { it.copy(libroElegido = id) }
+    fun alElegirLibro(id: Long?) {
+        _estado.update { it.copy(libroElegido = id, paginasGuardadas = emptySet()) }
+        cargarPaginas(id)
+    }
     fun alCambiarTitulo(titulo: String) = _estado.update { it.copy(tituloNuevo = titulo) }
     fun alElegirArea(area: String) = _estado.update { it.copy(areaNueva = area) }
     fun alCambiarPagina(pagina: String) = _estado.update { it.copy(pagina = pagina.filter(Char::isDigit).take(4)) }
@@ -139,6 +169,7 @@ class RevisionViewModel(
                 }
             }.onSuccess { r ->
                 borrador.limpiar()
+                borrador.libroPreferido = r.libroId
                 _estado.update { it.copy(fase = FaseRevision.Listo(r.libroId, r.fragmentos)) }
             }.onFailure {
                 _estado.update { it.copy(fase = FaseRevision.Editando, error = "No se pudo guardar la página. Inténtalo otra vez.") }
@@ -171,10 +202,23 @@ fun RevisionRoute(
     viewModel: RevisionViewModel = viewModel(factory = RevisionViewModel.Factory),
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
+    var confirmarSalida by rememberSaveable { mutableStateOf(false) }
+    val hayCambios = estado.fase == FaseRevision.Editando && estado.texto.isNotBlank()
+    BackHandler(enabled = hayCambios) { confirmarSalida = true }
+    if (confirmarSalida) {
+        DialogoConfirmar(
+            titulo = "¿Descartar esta página?",
+            texto = "Se perderá el texto que revisaste. Tendrás que volver a tomar la foto.",
+            confirmar = "Descartar",
+            cancelar = "Seguir revisando",
+            onConfirmar = { confirmarSalida = false; onVolver() },
+            onCancelar = { confirmarSalida = false },
+        )
+    }
     RevisionScreen(
         estado = estado,
         acciones = AccionesRevision(
-            onVolver = onVolver,
+            onVolver = { if (hayCambios) confirmarSalida = true else onVolver() },
             onTexto = viewModel::alCambiarTexto,
             onLibro = viewModel::alElegirLibro,
             onTitulo = viewModel::alCambiarTitulo,
@@ -204,7 +248,7 @@ data class AccionesRevision(
 @Composable
 fun RevisionScreen(estado: RevisionUiState, acciones: AccionesRevision) {
     Box(Modifier.fillMaxSize().background(Linen).safeDrawingPadding(), contentAlignment = Alignment.TopCenter) {
-        Column(Modifier.widthIn(max = 720.dp).fillMaxSize()) {
+        Column(Modifier.widthIn(max = 1080.dp).fillMaxSize()) {
             Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 20.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (estado.fase !is FaseRevision.Indexando) {
                     IconButton(onClick = acciones.onVolver) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver a la cámara") }
@@ -222,13 +266,46 @@ fun RevisionScreen(estado: RevisionUiState, acciones: AccionesRevision) {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Formulario(estado: RevisionUiState, acciones: AccionesRevision) {
-    Column(
-        Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
+    Column(Modifier.fillMaxSize()) {
+        BoxWithConstraints(Modifier.weight(1f)) {
+            if (maxWidth >= 840.dp) {
+                Row(Modifier.fillMaxSize().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        TextoOcr(estado, acciones, alturaMinima = 420.dp)
+                    }
+                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        DatosPagina(estado, acciones)
+                    }
+                }
+            } else {
+                Column(
+                    Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    TextoOcr(estado, acciones, alturaMinima = 220.dp)
+                    DatosPagina(estado, acciones)
+                }
+            }
+        }
+        // Barra fija: «Guardar» siempre a la vista, sin desplazarse.
+        Surface(color = Linen, shadowElevation = 6.dp) {
+            Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp)) {
+                if (estado.error != null) Text(estado.error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+                BotonPrincipal(
+                    if (estado.reemplaza) "Reemplazar página ${estado.pagina}" else "Guardar página",
+                    acciones.onGuardar,
+                    habilitado = estado.puedeGuardar,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TextoOcr(estado: RevisionUiState, acciones: AccionesRevision, alturaMinima: Dp) {
         Surface(color = Mist, shape = RoundedCornerShape(16.dp)) {
             Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Outlined.Info, contentDescription = null, tint = Ink)
@@ -236,18 +313,24 @@ private fun Formulario(estado: RevisionUiState, acciones: AccionesRevision) {
                 Text("Corrige las palabras que la cámara leyó mal antes de guardar.", style = MaterialTheme.typography.bodyMedium)
             }
         }
-        CampoTexto(estado.texto, acciones.onTexto, "Escribe o pega el texto de la página", unaLinea = false, alturaMinima = 220.dp, modifier = Modifier.fillMaxWidth())
+        EtiquetaCampo("Texto de la página")
+        CampoTexto(estado.texto, acciones.onTexto, "Escribe o pega el texto de la página", unaLinea = false, alturaMinima = alturaMinima, modifier = Modifier.fillMaxWidth())
+}
 
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun DatosPagina(estado: RevisionUiState, acciones: AccionesRevision) {
         Etiqueta("¿De qué libro es?")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             estado.libros.forEach { libro -> ChipSeleccion(libro.titulo, estado.libroElegido == libro.id, { acciones.onLibro(libro.id) }) }
             ChipSeleccion("Libro nuevo", estado.libroElegido == null, { acciones.onLibro(null) }, icono = Icons.Outlined.Add)
         }
         if (estado.libroElegido == null) {
-            CampoTexto(estado.tituloNuevo, acciones.onTitulo, "Título del libro, por ejemplo «Ciencia y Tecnología 5»", modifier = Modifier.fillMaxWidth())
+            EtiquetaCampo("Título del libro")
+            CampoTexto(estado.tituloNuevo, acciones.onTitulo, "Por ejemplo, «Ciencia y Tecnología 5»", modifier = Modifier.fillMaxWidth())
             Etiqueta("Área")
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                AREAS_CURRICULARES.forEach { area -> ChipSeleccion(area, estado.areaNueva == area, { acciones.onArea(area) }) }
+                AREAS_CURRICULARES.forEach { area -> ChipSeleccion(area, estado.areaNueva == area, { acciones.onArea(area) }, icono = iconoArea(area)) }
             }
         }
 
@@ -259,12 +342,19 @@ private fun Formulario(estado: RevisionUiState, acciones: AccionesRevision) {
             teclado = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.width(160.dp),
         )
-
-        if (estado.error != null) Text(estado.error, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
-        Spacer(Modifier.height(4.dp))
-        BotonPrincipal("Guardar página", acciones.onGuardar, habilitado = estado.puedeGuardar, modifier = Modifier.fillMaxWidth())
-        Spacer(Modifier.height(16.dp))
-    }
+        if (estado.reemplaza) {
+            Surface(color = AvisoContainer, shape = RoundedCornerShape(16.dp)) {
+                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.WarningAmber, contentDescription = null, tint = Aviso)
+                    Spacer(Modifier.width(12.dp))
+                    Text(
+                        "La página ${estado.pagina} ya está guardada en este libro. Si continúas, se reemplazará por este texto.",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.height(8.dp))
 }
 
 @Composable
@@ -280,11 +370,7 @@ private fun Indexando(fase: FaseRevision.Indexando) {
         val avance = if (fase.total == 0) 0f else fase.hechos.toFloat() / fase.total
         LinearProgressIndicator(progress = { avance }, modifier = Modifier.fillMaxWidth(0.7f).height(8.dp), color = Brand, trackColor = BrandSoft)
         Spacer(Modifier.height(12.dp))
-        Text(
-            if (fase.total == 0) "Dividiendo el texto en partes" else "Parte ${fase.hechos} de ${fase.total}",
-            style = MaterialTheme.typography.bodyMedium,
-            color = TextSecondary,
-        )
+        Text("Esto tarda unos segundos.", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
     }
 }
 
@@ -296,7 +382,7 @@ private fun Listo(fase: FaseRevision.Listo, acciones: AccionesRevision) {
         Text("Página guardada", style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(8.dp))
         Text(
-            "Yachay ya puede usarla para ayudarte (${fase.fragmentos} ${if (fase.fragmentos == 1) "parte" else "partes"}).",
+            "Yachay ya puede usarla para ayudarte.",
             style = MaterialTheme.typography.bodyMedium,
             color = TextSecondary,
             textAlign = TextAlign.Center,

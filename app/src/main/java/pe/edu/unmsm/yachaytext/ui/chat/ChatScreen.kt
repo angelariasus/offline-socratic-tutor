@@ -34,16 +34,18 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Quiz
 import androidx.compose.material.icons.outlined.StopCircle
-import androidx.compose.material.icons.outlined.Translate
-import androidx.compose.material.icons.outlined.WifiOff
+import androidx.compose.material.icons.outlined.Abc
+import androidx.compose.material.icons.outlined.OfflinePin
+import androidx.compose.material.icons.outlined.QuestionAnswer
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -51,6 +53,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import pe.edu.unmsm.yachaytext.ui.libro.HojaPagina
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -96,9 +104,12 @@ fun ChatRoute(onVolver: () -> Unit, viewModel: ChatViewModel = viewModel(factory
         onEscuchar = viewModel::alternarLectura,
         // El dictado con Vosk llega en el Sprint 3 (RF04).
         onMicrofono = {},
+        onAbrirFuente = viewModel::abrirFuente,
+        onCerrarFuente = viewModel::cerrarFuente,
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ChatScreen(
     estado: ChatUiState,
@@ -108,8 +119,14 @@ fun ChatScreen(
     onAtajo: (Atajo) -> Unit,
     onEscuchar: (MensajeUi) -> Unit,
     onMicrofono: () -> Unit,
+    onAbrirFuente: (MensajeUi) -> Unit = {},
+    onCerrarFuente: () -> Unit = {},
 ) {
     val lista = rememberLazyListState()
+    val foco = remember { FocusRequester() }
+    LaunchedEffect(estado.sinPreguntas, estado.mensajes.isNotEmpty()) {
+        if (estado.sinPreguntas && estado.mensajes.isNotEmpty()) runCatching { foco.requestFocus() }
+    }
     val totalItems = estado.mensajes.size + if (estado.pensando) 1 else 0
     LaunchedEffect(totalItems) {
         if (totalItems > 0) lista.animateScrollToItem(totalItems - 1)
@@ -132,7 +149,13 @@ fun ChatScreen(
             ) {
                 items(estado.mensajes, key = { it.id }) { mensaje ->
                     if (mensaje.rol == RolMensaje.TUTOR) {
-                        MensajeTutor(mensaje, estado.variante, leyendo = estado.leyendoId == mensaje.id, onEscuchar = { onEscuchar(mensaje) })
+                        MensajeTutor(
+                            mensaje,
+                            estado.variante,
+                            leyendo = estado.leyendoId == mensaje.id,
+                            onEscuchar = { onEscuchar(mensaje) },
+                            onAbrirFuente = { onAbrirFuente(mensaje) },
+                        )
                     } else {
                         MensajeEstudiante(mensaje)
                     }
@@ -140,7 +163,14 @@ fun ChatScreen(
                 if (estado.pensando) item(key = "pensando") { Pensando() }
             }
             Atajos(habilitados = !estado.pensando, onAtajo = onAtajo)
-            Compositor(estado, onCambiarEntrada, onEnviar, onMicrofono)
+            Compositor(estado, onCambiarEntrada, onEnviar, onMicrofono, foco)
+        }
+    }
+    estado.fuenteAbierta?.let { f ->
+        ModalBottomSheet(onDismissRequest = onCerrarFuente, containerColor = Paper) {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                f.paginas.forEach { HojaPagina(it, titulo = f.titulo) }
+            }
         }
     }
 }
@@ -165,7 +195,7 @@ private fun BarraSuperior(titulo: String, subtitulo: String?, onVolver: () -> Un
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun MensajeTutor(mensaje: MensajeUi, variante: VarianteQuechua, leyendo: Boolean, onEscuchar: () -> Unit) {
+private fun MensajeTutor(mensaje: MensajeUi, variante: VarianteQuechua, leyendo: Boolean, onEscuchar: () -> Unit, onAbrirFuente: () -> Unit) {
     Column(Modifier.fillMaxWidth().padding(end = 32.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(textoResaltado(mensaje), style = MaterialTheme.typography.bodyLarge)
 
@@ -183,19 +213,31 @@ private fun MensajeTutor(mensaje: MensajeUi, variante: VarianteQuechua, leyendo:
             }
         }
 
-        if (mensaje.fuente != null) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.AutoMirrored.Outlined.MenuBook, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text(mensaje.fuente, style = MaterialTheme.typography.labelMedium, color = TextSecondary)
+        // Acciones del mensaje, sin bordes para no competir con el texto.
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            if (mensaje.fuente != null) {
+                AccionMensaje(Icons.AutoMirrored.Outlined.MenuBook, mensaje.fuente, "Ver ${mensaje.fuente}", onAbrirFuente)
             }
+            AccionMensaje(
+                icono = if (leyendo) Icons.Outlined.StopCircle else Icons.AutoMirrored.Outlined.VolumeUp,
+                texto = if (leyendo) "Detener" else "Escuchar",
+                onClick = onEscuchar,
+            )
         }
+    }
+}
 
-        BotonPildora(
-            icono = if (leyendo) Icons.Outlined.StopCircle else Icons.AutoMirrored.Outlined.VolumeUp,
-            texto = if (leyendo) "Detener" else "Escuchar",
-            onClick = onEscuchar,
-        )
+@Composable
+private fun AccionMensaje(icono: ImageVector, texto: String, descripcion: String? = null, onClick: () -> Unit) {
+    Surface(onClick = onClick, shape = RoundedCornerShape(50), color = Linen, modifier = Modifier.height(40.dp)) {
+        Row(
+            Modifier.padding(start = 8.dp, end = 12.dp).then(if (descripcion != null) Modifier.semantics { contentDescription = descripcion } else Modifier),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(icono, contentDescription = null, tint = Brand, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(texto, style = MaterialTheme.typography.labelLarge, color = Brand)
+        }
     }
 }
 
@@ -259,9 +301,9 @@ private fun Atajos(habilitados: Boolean, onAtajo: (Atajo) -> Unit) {
         items(Atajo.entries) { atajo ->
             BotonPildora(
                 icono = when (atajo) {
-                    Atajo.Explicame -> Icons.AutoMirrored.Outlined.HelpOutline
+                    Atajo.Explicame -> Icons.Outlined.QuestionAnswer
                     Atajo.Quiz -> Icons.Outlined.Quiz
-                    Atajo.Palabras -> Icons.Outlined.Translate
+                    Atajo.Palabras -> Icons.Outlined.Abc
                 },
                 texto = atajo.etiqueta,
                 habilitado = habilitados,
@@ -277,6 +319,7 @@ private fun Compositor(
     onCambiarEntrada: (String) -> Unit,
     onEnviar: () -> Unit,
     onMicrofono: () -> Unit,
+    foco: FocusRequester,
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp, top = 4.dp),
@@ -295,7 +338,7 @@ private fun Compositor(
                 BasicTextField(
                     value = estado.entrada,
                     onValueChange = onCambiarEntrada,
-                    modifier = Modifier.fillMaxWidth().padding(end = 8.dp).height(52.dp),
+                    modifier = Modifier.fillMaxWidth().padding(end = 8.dp).height(52.dp).focusRequester(foco),
                     textStyle = MaterialTheme.typography.bodyLarge.copy(color = Ink),
                     cursorBrush = SolidColor(Brand),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
@@ -318,12 +361,10 @@ private fun Compositor(
                     onClick = onMicrofono,
                 )
                 Spacer(Modifier.width(8.dp))
-                Surface(color = Mist, shape = RoundedCornerShape(50)) {
-                    Row(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Outlined.WifiOff, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text("Yachay · sin internet", style = MaterialTheme.typography.labelMedium, color = TextSecondary)
-                    }
+                Row(Modifier.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.OfflinePin, contentDescription = null, tint = Brand, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Funciona sin internet", style = MaterialTheme.typography.labelMedium, color = TextSecondary)
                 }
                 Spacer(Modifier.weight(1f))
                 BotonCircular(

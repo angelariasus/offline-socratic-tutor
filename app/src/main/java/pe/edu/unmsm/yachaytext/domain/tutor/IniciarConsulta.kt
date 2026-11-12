@@ -21,6 +21,6 @@ class IniciarConsulta(
 
     companion object {
         /** Se reemplaza por la primera pregunta del estudiante. */
-        const val TITULO_PROVISIONAL = "Nueva consulta"
+        const val TITULO_PROVISIONAL = "Nueva pregunta"
     }
 }

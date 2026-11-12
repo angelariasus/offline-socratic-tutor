@@ -35,13 +35,18 @@ import pe.edu.unmsm.yachaytext.ui.bienvenida.BienvenidaScreen
 import pe.edu.unmsm.yachaytext.ui.biblioteca.BibliotecaUiState
 import pe.edu.unmsm.yachaytext.ui.biblioteca.LibroUi
 import pe.edu.unmsm.yachaytext.ui.chat.ChatPreviewData
-import pe.edu.unmsm.yachaytext.ui.inicio.ConversacionReciente
+import pe.edu.unmsm.yachaytext.ui.inicio.AccionesInicio
+import pe.edu.unmsm.yachaytext.ui.common.ConversacionResumen
+import pe.edu.unmsm.yachaytext.ui.libro.AccionesLibro
+import pe.edu.unmsm.yachaytext.ui.libro.LibroDetalleUiState
+import pe.edu.unmsm.yachaytext.ui.libro.LibroScreen
+import pe.edu.unmsm.yachaytext.data.Pagina
+import pe.edu.unmsm.yachaytext.ui.tutor.AccionesTutor
 import pe.edu.unmsm.yachaytext.ui.inicio.InicioScreen
 import pe.edu.unmsm.yachaytext.ui.inicio.InicioUiState
 import pe.edu.unmsm.yachaytext.ui.chat.ChatScreen
 import pe.edu.unmsm.yachaytext.ui.chat.ChatUiState
 import pe.edu.unmsm.yachaytext.ui.theme.YachayTheme
-import pe.edu.unmsm.yachaytext.ui.tutor.ConversacionResumen
 import pe.edu.unmsm.yachaytext.ui.tutor.TutorScreen
 
 /**
@@ -86,20 +91,19 @@ class ScreenshotTest {
         InicioScreen(
             InicioUiState(
                 nombre = "Angel",
-                conversaciones = listOf(
-                    ConversacionReciente(1, "La fotosíntesis", AHORA - 5 * MIN),
-                    ConversacionReciente(2, "Fracciones equivalentes", AHORA - 26 * HORA),
-                ),
-                libros = LIBROS.take(2),
+                conversaciones = CONVERSACIONES.take(2),
+                libros = LIBROS.take(3),
+                totalLibros = LIBROS.size,
                 cargando = false,
             ),
-            {}, {}, {}, {}, ahora = AHORA,
+            AccionesInicio(),
+            ahora = AHORA,
         )
     }
 
     @Test
     fun inicioVacio() = capturar("inicio_vacio") {
-        InicioScreen(InicioUiState(cargando = false), {}, {}, {}, {}, ahora = AHORA)
+        InicioScreen(InicioUiState(cargando = false), AccionesInicio(), ahora = AHORA)
     }
 
     @Test
@@ -185,11 +189,56 @@ class ScreenshotTest {
 
     @Test
     fun tutorLista() = capturar("tutor_lista") {
-        TutorScreen(
-            listOf(ConversacionResumen(1, "La fotosíntesis"), ConversacionResumen(2, "Fracciones equivalentes"), ConversacionResumen(3, "Las partes de la célula")),
-            onAbrirChat = {},
-            onNueva = {},
+        TutorScreen(CONVERSACIONES, AccionesTutor(), ahora = AHORA)
+    }
+
+    private val paginas = listOf(
+        Pagina(42, textoOcr.substringAfter("\n\n")),
+        Pagina(43, "La clorofila es el pigmento verde de las hojas. Gracias a ella, las plantas captan la energía de la luz del sol."),
+        Pagina(44, "Durante la fotosíntesis, las plantas liberan oxígeno al aire. Por eso decimos que los bosques ayudan a respirar."),
+    )
+
+    @Test
+    fun libroDetalle() = capturar("libro_detalle") {
+        LibroScreen(LibroDetalleUiState(LIBROS[0], paginas, cargando = false), AccionesLibro(), ahora = AHORA)
+    }
+
+    @Test
+    fun libroSinPaginas() = capturar("libro_sin_paginas") {
+        LibroScreen(LibroDetalleUiState(LIBROS[0].copy(paginas = 0), emptyList(), cargando = false), AccionesLibro(), ahora = AHORA)
+    }
+
+    @Test
+    fun revisionReemplaza() = capturar("revision_reemplaza") {
+        RevisionScreen(
+            RevisionUiState(
+                texto = textoOcr,
+                libros = listOf(LibroOpcion(1, "Ciencia y Tecnología 5"), LibroOpcion(2, "Matemática 5")),
+                libroElegido = 1,
+                pagina = "42",
+                paginasGuardadas = setOf(42),
+            ),
+            AccionesRevision(),
         )
+    }
+
+    // Tableta en horizontal: cuadrícula de libros y revisión en dos columnas.
+    @Test
+    @Config(qualifiers = HORIZONTAL)
+    fun bibliotecaHorizontal() = capturar("biblioteca_horizontal") {
+        BibliotecaScreen(BibliotecaUiState(libros = LIBROS, cargando = false), {}, {}, {}, {}, ahora = AHORA)
+    }
+
+    @Test
+    @Config(qualifiers = HORIZONTAL)
+    fun revisionHorizontal() = capturar("revision_horizontal") {
+        RevisionScreen(RevisionUiState(texto = textoOcr, tituloNuevo = "Ciencia y Tecnología 5", areaNueva = "Ciencia y Tecnología", pagina = "42"), AccionesRevision())
+    }
+
+    @Test
+    @Config(qualifiers = HORIZONTAL)
+    fun libroDetalleHorizontal() = capturar("libro_detalle_horizontal") {
+        LibroScreen(LibroDetalleUiState(LIBROS[0], paginas, cargando = false), AccionesLibro(), ahora = AHORA)
     }
 }
 
@@ -203,5 +252,12 @@ private val LIBROS = listOf(
     LibroUi(4, "Matemática 4", "Matemática", 1, AHORA - 20 * 24 * HORA),
 )
 
+private val CONVERSACIONES = listOf(
+    ConversacionResumen(1, "La fotosíntesis", AHORA - 5 * MIN, "Ciencia y Tecnología 5", "Ciencia y Tecnología"),
+    ConversacionResumen(2, "Fracciones equivalentes", AHORA - 26 * HORA, "Matemática 5", "Matemática"),
+    ConversacionResumen(3, "¿Por qué llueve?", AHORA - 3 * 24 * HORA),
+)
+
 private const val TABLETA = "w600dp-h960dp-port-mdpi"
+private const val HORIZONTAL = "w960dp-h600dp-land-mdpi"
 private const val TELEFONO = "w400dp-h860dp-port-xhdpi"

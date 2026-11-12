@@ -1,5 +1,6 @@
 package pe.edu.unmsm.yachaytext.ui.inicio
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,26 +12,28 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.LibraryBooks
 import androidx.compose.material.icons.outlined.CameraAlt
+import androidx.compose.material.icons.outlined.Forum
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -50,24 +53,25 @@ import pe.edu.unmsm.yachaytext.data.LibroRepository
 import pe.edu.unmsm.yachaytext.data.PreferenciasRepository
 import pe.edu.unmsm.yachaytext.domain.tutor.IniciarConsulta
 import pe.edu.unmsm.yachaytext.ui.biblioteca.LibroUi
+import pe.edu.unmsm.yachaytext.ui.common.BotonPrincipal
+import pe.edu.unmsm.yachaytext.ui.common.ConversacionResumen
 import pe.edu.unmsm.yachaytext.ui.common.EstadoVacio
+import pe.edu.unmsm.yachaytext.ui.common.PaisajeAndino
 import pe.edu.unmsm.yachaytext.ui.common.TarjetaConversacion
 import pe.edu.unmsm.yachaytext.ui.common.TarjetaLibro
 import pe.edu.unmsm.yachaytext.ui.common.TituloSeccion
-import pe.edu.unmsm.yachaytext.ui.common.tiempoRelativo
-import pe.edu.unmsm.yachaytext.ui.theme.Mist
-import pe.edu.unmsm.yachaytext.ui.common.PaisajeAndino
-import pe.edu.unmsm.yachaytext.ui.theme.Paper
-import pe.edu.unmsm.yachaytext.ui.theme.TextSecondary
+import pe.edu.unmsm.yachaytext.ui.common.resumir
 import pe.edu.unmsm.yachaytext.ui.theme.Brand
+import pe.edu.unmsm.yachaytext.ui.theme.Ink
+import pe.edu.unmsm.yachaytext.ui.theme.Line
 import pe.edu.unmsm.yachaytext.ui.theme.Linen
-
-data class ConversacionReciente(val id: Long, val titulo: String, val fechaInicio: Long)
+import pe.edu.unmsm.yachaytext.ui.theme.Paper
 
 data class InicioUiState(
     val nombre: String? = null,
-    val conversaciones: List<ConversacionReciente> = emptyList(),
+    val conversaciones: List<ConversacionResumen> = emptyList(),
     val libros: List<LibroUi> = emptyList(),
+    val totalLibros: Int = 0,
     val cargando: Boolean = true,
 )
 
@@ -83,15 +87,15 @@ class InicioViewModel(
     val estado: StateFlow<InicioUiState> = combine(preferencias.observar(), chat.observarConversaciones(), libros.observarLibros()) { p, c, l ->
         InicioUiState(
             nombre = p.nombre,
-            conversaciones = c.take(RECIENTES).map { ConversacionReciente(it.id, it.titulo, it.fechaInicio) },
+            conversaciones = resumir(c.take(RECIENTES), l),
             libros = l.take(RECIENTES).map { LibroUi(it.id, it.titulo, it.areaCurso, it.numPaginas, it.fechaIngesta) },
+            totalLibros = l.size,
             cargando = false,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), InicioUiState())
 
-    /** Con [libroId], la consulta queda ligada a ese libro (hasta que exista Detalle de libro). */
-    fun nuevaConsulta(libroId: Long? = null, alCrear: (Long) -> Unit) {
-        viewModelScope.launch { alCrear(iniciarConsulta(libroId)) }
+    fun nuevaConsulta(alCrear: (Long) -> Unit) {
+        viewModelScope.launch { alCrear(iniciarConsulta()) }
     }
 
     companion object {
@@ -105,31 +109,37 @@ class InicioViewModel(
     }
 }
 
+data class AccionesInicio(
+    val onPreguntar: () -> Unit = {},
+    val onEscanear: () -> Unit = {},
+    val onAbrirChat: (Long) -> Unit = {},
+    val onAbrirLibro: (Long) -> Unit = {},
+    val onVerBiblioteca: () -> Unit = {},
+)
+
 @Composable
 fun InicioRoute(
     onAbrirChat: (Long) -> Unit,
+    onAbrirLibro: (Long) -> Unit,
     onEscanear: () -> Unit,
+    onVerBiblioteca: () -> Unit,
     viewModel: InicioViewModel = viewModel(factory = InicioViewModel.Factory),
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
     InicioScreen(
         estado = estado,
-        onPreguntar = { viewModel.nuevaConsulta(alCrear = onAbrirChat) },
-        onEscanear = onEscanear,
-        onAbrirChat = onAbrirChat,
-        onAbrirLibro = { viewModel.nuevaConsulta(it, onAbrirChat) },
+        acciones = AccionesInicio(
+            onPreguntar = { viewModel.nuevaConsulta(onAbrirChat) },
+            onEscanear = onEscanear,
+            onAbrirChat = onAbrirChat,
+            onAbrirLibro = onAbrirLibro,
+            onVerBiblioteca = onVerBiblioteca,
+        ),
     )
 }
 
 @Composable
-fun InicioScreen(
-    estado: InicioUiState,
-    onPreguntar: () -> Unit,
-    onEscanear: () -> Unit,
-    onAbrirChat: (Long) -> Unit,
-    onAbrirLibro: (Long) -> Unit,
-    ahora: Long = System.currentTimeMillis(),
-) {
+fun InicioScreen(estado: InicioUiState, acciones: AccionesInicio, ahora: Long = System.currentTimeMillis()) {
     Box(Modifier.fillMaxSize().background(Linen).statusBarsPadding(), contentAlignment = Alignment.TopCenter) {
         LazyColumn(
             modifier = Modifier.widthIn(max = 720.dp).fillMaxSize(),
@@ -137,7 +147,7 @@ fun InicioScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item { Saludo(estado.nombre) }
-            item { Acciones(onPreguntar, onEscanear) }
+            item { Acciones(acciones.onPreguntar, acciones.onEscanear) }
 
             if (!estado.cargando && estado.conversaciones.isEmpty() && estado.libros.isEmpty()) {
                 item {
@@ -146,7 +156,7 @@ fun InicioScreen(
                         titulo = "Empieza con tu libro",
                         texto = "Escanea una página o hazle una pregunta a Yachay. Todo funciona sin internet.",
                         accion = "Escanear página",
-                        onAccion = onEscanear,
+                        onAccion = acciones.onEscanear,
                     )
                 }
             }
@@ -154,14 +164,22 @@ fun InicioScreen(
             if (estado.conversaciones.isNotEmpty()) {
                 item { TituloSeccion("Continúa donde te quedaste") }
                 items(estado.conversaciones, key = { "c${it.id}" }) { c ->
-                    TarjetaConversacion(c.titulo, tiempoRelativo(c.fechaInicio, ahora), onClick = { onAbrirChat(c.id) })
+                    TarjetaConversacion(c.titulo, c.detalle(ahora), onClick = { acciones.onAbrirChat(c.id) }, area = c.area)
                 }
             }
 
             if (estado.libros.isNotEmpty()) {
-                item { TituloSeccion("Tus libros") }
+                item {
+                    TituloSeccion("Tus libros") {
+                        if (estado.totalLibros > estado.libros.size) {
+                            TextButton(onClick = acciones.onVerBiblioteca) {
+                                Text("Ver todos (${estado.totalLibros})", style = MaterialTheme.typography.labelLarge, color = Brand)
+                            }
+                        }
+                    }
+                }
                 items(estado.libros, key = { "l${it.id}" }) { libro ->
-                    TarjetaLibro(libro, ahora, onClick = { onAbrirLibro(libro.id) })
+                    TarjetaLibro(libro, ahora, onClick = { acciones.onAbrirLibro(libro.id) })
                 }
             }
         }
@@ -184,29 +202,30 @@ private fun Saludo(nombre: String?) {
                 nombre ?: "¿Qué aprendemos hoy?",
                 style = MaterialTheme.typography.displaySmall,
                 color = Paper,
+                modifier = Modifier.semantics { heading() },
             )
         }
     }
 }
 
+/** Las dos acciones principales, ambas con texto visible (reconocer antes que recordar). */
 @Composable
 private fun Acciones(onPreguntar: () -> Unit, onEscanear: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         Surface(
             onClick = onPreguntar,
-            color = Mist,
+            color = Paper,
+            border = BorderStroke(1.dp, Line),
             shape = RoundedCornerShape(50),
-            modifier = Modifier.weight(1f).height(72.dp),
+            modifier = Modifier.weight(1f).height(64.dp),
         ) {
-            Box(Modifier.padding(horizontal = 28.dp), contentAlignment = Alignment.CenterStart) {
-                Text("¿Tienes alguna pregunta?", style = MaterialTheme.typography.titleMedium, color = TextSecondary)
+            Row(Modifier.padding(horizontal = 22.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Outlined.Forum, contentDescription = null, tint = Brand)
+                Spacer(Modifier.width(12.dp))
+                Text("Pregúntale a Yachay", style = MaterialTheme.typography.titleMedium, color = Ink)
             }
         }
         Spacer(Modifier.width(12.dp))
-        Surface(onClick = onEscanear, color = Brand, shape = CircleShape, modifier = Modifier.size(72.dp)) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(Icons.Outlined.CameraAlt, contentDescription = "Escanear página", tint = Paper, modifier = Modifier.size(30.dp))
-            }
-        }
+        BotonPrincipal("Escanear", onEscanear, icono = Icons.Outlined.CameraAlt, alto = 64.dp)
     }
 }

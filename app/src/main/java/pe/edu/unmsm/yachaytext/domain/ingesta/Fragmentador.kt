@@ -64,3 +64,24 @@ class Fragmentador(private val maxCaracteres: Int = 500) {
         return partes
     }
 }
+
+/**
+ * Reconstruye el texto de una página a partir de sus fragmentos en orden, quitando la
+ * oración que cada fragmento repite del anterior (solapamiento del [Fragmentador]).
+ */
+fun unirFragmentos(fragmentos: List<String>): String {
+    val texto = StringBuilder()
+    for (fragmento in fragmentos) {
+        if (texto.isEmpty()) {
+            texto.append(fragmento)
+            continue
+        }
+        // Mayor prefijo del fragmento que coincide con el final de lo acumulado.
+        val solape = (minOf(texto.length, fragmento.length) downTo 1)
+            .firstOrNull { k -> texto.endsWith(fragmento.substring(0, k)) && (k == fragmento.length || fragmento[k] == ' ') }
+            ?: 0
+        val resto = fragmento.substring(solape).trimStart()
+        if (resto.isNotEmpty()) texto.append(' ').append(resto)
+    }
+    return texto.toString()
+}

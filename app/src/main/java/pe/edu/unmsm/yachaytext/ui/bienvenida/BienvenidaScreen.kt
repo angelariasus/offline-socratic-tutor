@@ -44,6 +44,15 @@ import pe.edu.unmsm.yachaytext.ui.theme.Paper
 import pe.edu.unmsm.yachaytext.ui.theme.TextSecondary
 import pe.edu.unmsm.yachaytext.ui.theme.Linen
 import pe.edu.unmsm.yachaytext.ui.common.LogoYachay
+import pe.edu.unmsm.yachaytext.ui.common.PasosYachay
+import pe.edu.unmsm.yachaytext.ui.common.SelectorGrado
+import pe.edu.unmsm.yachaytext.ui.theme.Line
+import pe.edu.unmsm.yachaytext.ui.theme.Paper
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 
 /** Primer uso: registra el perfil local (nombre y grado). Se puede omitir y completar luego en Ajustes. */
 @Composable
@@ -77,7 +86,7 @@ fun BienvenidaScreen(
         ) {
             LogoYachay()
             Spacer(Modifier.height(24.dp))
-            Text("Hola, soy Yachay", style = MaterialTheme.typography.displaySmall, textAlign = TextAlign.Center)
+            Text("Hola, soy Yachay", style = MaterialTheme.typography.displaySmall, textAlign = TextAlign.Center, modifier = Modifier.semantics { heading() })
             Spacer(Modifier.height(8.dp))
             Text(
                 "Te ayudo a entender tus libros haciéndote preguntas. Funciono sin internet.",
@@ -85,15 +94,17 @@ fun BienvenidaScreen(
                 color = TextSecondary,
                 textAlign = TextAlign.Center,
             )
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(24.dp))
+            Surface(color = Paper, shape = RoundedCornerShape(20.dp), border = BorderStroke(1.dp, Line), modifier = Modifier.fillMaxWidth()) {
+                PasosYachay(Modifier.padding(20.dp))
+            }
+            Spacer(Modifier.height(24.dp))
 
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("¿Cómo te llamas?", style = MaterialTheme.typography.titleMedium)
                 CampoTexto(nombre, onNombre, "Tu nombre", modifier = Modifier.fillMaxWidth())
                 Text("¿En qué grado estás?", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    GRADOS.forEach { g -> ChipSeleccion(g, grado == g, { onGrado(g) }) }
-                }
+                SelectorGrado(grado, onGrado)
             }
 
             Spacer(Modifier.height(32.dp))

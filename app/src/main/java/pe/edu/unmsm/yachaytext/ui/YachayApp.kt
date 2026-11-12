@@ -7,9 +7,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.LibraryBooks
 import androidx.compose.material.icons.outlined.Forum
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.LocalLibrary
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +38,8 @@ import pe.edu.unmsm.yachaytext.ui.chat.ChatViewModel
 import pe.edu.unmsm.yachaytext.ui.escaneo.EscaneoRoute
 import pe.edu.unmsm.yachaytext.ui.escaneo.RevisionRoute
 import pe.edu.unmsm.yachaytext.ui.inicio.InicioRoute
+import pe.edu.unmsm.yachaytext.ui.libro.LibroRoute
+import pe.edu.unmsm.yachaytext.ui.libro.LibroViewModel
 import pe.edu.unmsm.yachaytext.ui.theme.Mist
 import pe.edu.unmsm.yachaytext.ui.theme.Paper
 import pe.edu.unmsm.yachaytext.ui.tutor.TutorRoute
@@ -45,7 +47,7 @@ import pe.edu.unmsm.yachaytext.ui.tutor.TutorRoute
 /** Pestañas principales (Figura 3.8 del documento de avance). */
 enum class TopLevelDestination(val route: String, val label: String, val icon: ImageVector) {
     Inicio("inicio", "Inicio", Icons.Outlined.Home),
-    Biblioteca("biblioteca", "Biblioteca", Icons.Outlined.LocalLibrary),
+    Biblioteca("biblioteca", "Biblioteca", Icons.AutoMirrored.Outlined.LibraryBooks),
     Tutor("tutor", "Tutor", Icons.Outlined.Forum),
     Ajustes("ajustes", "Ajustes", Icons.Outlined.Settings),
 }
@@ -55,6 +57,8 @@ private const val RUTA_ESCANEO = "escaneo"
 private const val RUTA_REVISION = "revision"
 private const val RUTA_CHAT = "chat/{${ChatViewModel.ARG_CONVERSACION}}"
 private fun rutaChat(id: Long) = "chat/$id"
+private const val RUTA_LIBRO = "libro/{${LibroViewModel.ARG_LIBRO}}"
+private fun rutaLibro(id: Long) = "libro/$id"
 
 @Composable
 fun YachayApp(navController: NavHostController = rememberNavController(), rutaInicial: String = TopLevelDestination.Inicio.route) {
@@ -73,10 +77,22 @@ fun YachayApp(navController: NavHostController = rememberNavController(), rutaIn
             modifier = Modifier.padding(padding),
         ) {
             composable(TopLevelDestination.Inicio.route) {
-                InicioRoute(onAbrirChat = { navController.navigate(rutaChat(it)) }, onEscanear = { navController.navigate(RUTA_ESCANEO) })
+                InicioRoute(
+                    onAbrirChat = { navController.navigate(rutaChat(it)) },
+                    onAbrirLibro = { navController.navigate(rutaLibro(it)) },
+                    onEscanear = { navController.navigate(RUTA_ESCANEO) },
+                    onVerBiblioteca = { irAPestana(navController, TopLevelDestination.Biblioteca.route) },
+                )
             }
             composable(TopLevelDestination.Biblioteca.route) {
-                BibliotecaRoute(onEscanear = { navController.navigate(RUTA_ESCANEO) }, onAbrirChat = { navController.navigate(rutaChat(it)) })
+                BibliotecaRoute(onEscanear = { navController.navigate(RUTA_ESCANEO) }, onAbrirLibro = { navController.navigate(rutaLibro(it)) })
+            }
+            composable(RUTA_LIBRO, arguments = listOf(navArgument(LibroViewModel.ARG_LIBRO) { type = NavType.LongType })) {
+                LibroRoute(
+                    onVolver = { navController.popBackStack() },
+                    onAbrirChat = { navController.navigate(rutaChat(it)) },
+                    onEscanear = { navController.navigate(RUTA_ESCANEO) },
+                )
             }
             composable(RUTA_ESCANEO) {
                 EscaneoRoute(onVolver = { navController.popBackStack() }, onTextoLeido = { navController.navigate(RUTA_REVISION) })

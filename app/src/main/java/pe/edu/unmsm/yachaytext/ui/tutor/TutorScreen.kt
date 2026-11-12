@@ -1,35 +1,39 @@
 package pe.edu.unmsm.yachaytext.ui.tutor
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material3.Icon
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -38,49 +42,104 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import pe.edu.unmsm.yachaytext.YachayApplication
 import pe.edu.unmsm.yachaytext.data.ChatRepository
+import pe.edu.unmsm.yachaytext.data.CopiaConversacion
+import pe.edu.unmsm.yachaytext.data.LibroRepository
 import pe.edu.unmsm.yachaytext.domain.tutor.IniciarConsulta
-import pe.edu.unmsm.yachaytext.ui.theme.Line
-import pe.edu.unmsm.yachaytext.ui.theme.Paper
-import pe.edu.unmsm.yachaytext.ui.theme.TextSecondary
+import pe.edu.unmsm.yachaytext.ui.common.BotonPrincipal
+import pe.edu.unmsm.yachaytext.ui.common.ConversacionResumen
+import pe.edu.unmsm.yachaytext.ui.common.DialogoTexto
+import pe.edu.unmsm.yachaytext.ui.common.Opcion
+import pe.edu.unmsm.yachaytext.ui.common.TarjetaConversacion
+import pe.edu.unmsm.yachaytext.ui.common.TituloSeccion
+import pe.edu.unmsm.yachaytext.ui.common.resumir
 import pe.edu.unmsm.yachaytext.ui.theme.Linen
+import pe.edu.unmsm.yachaytext.ui.theme.TextSecondary
 
-data class ConversacionResumen(val id: Long, val titulo: String)
+class TutorViewModel(
+    private val repositorio: ChatRepository,
+    libros: LibroRepository,
+    private val iniciarConsulta: IniciarConsulta,
+) : ViewModel() {
 
-class TutorViewModel(repositorio: ChatRepository, private val iniciarConsulta: IniciarConsulta) : ViewModel() {
-
-    val conversaciones: StateFlow<List<ConversacionResumen>> = repositorio.observarConversaciones()
-        .map { lista -> lista.map { ConversacionResumen(it.id, it.titulo) } }
+    val conversaciones: StateFlow<List<ConversacionResumen>> = combine(repositorio.observarConversaciones(), libros.observarLibros(), ::resumir)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** Última conversación borrada, para ofrecer «Deshacer» (control y libertad del usuario). */
+    private val _borrada = MutableStateFlow<CopiaConversacion?>(null)
+    val borrada: StateFlow<CopiaConversacion?> = _borrada.asStateFlow()
 
     fun nuevaConsulta(alCrear: (Long) -> Unit) {
         viewModelScope.launch { alCrear(iniciarConsulta()) }
     }
 
+    fun renombrar(id: Long, titulo: String) {
+        if (titulo.isNotBlank()) viewModelScope.launch { repositorio.renombrar(id, titulo.trim()) }
+    }
+
+    fun borrar(id: Long) {
+        viewModelScope.launch { _borrada.value = repositorio.borrar(id) }
+    }
+
+    fun deshacerBorrado() {
+        val copia = _borrada.value ?: return
+        _borrada.value = null
+        viewModelScope.launch { repositorio.restaurar(copia) }
+    }
+
+    fun olvidarBorrado() {
+        _borrada.value = null
+    }
+
     companion object {
         val Factory = viewModelFactory {
             initializer {
-                val app = this[APPLICATION_KEY] as YachayApplication
-                TutorViewModel(app.container.chatRepository, app.container.iniciarConsulta)
+                with((this[APPLICATION_KEY] as YachayApplication).container) { TutorViewModel(chatRepository, libroRepository, iniciarConsulta) }
             }
         }
     }
 }
 
+data class AccionesTutor(
+    val onAbrirChat: (Long) -> Unit = {},
+    val onNueva: () -> Unit = {},
+    val onRenombrar: (Long, String) -> Unit = { _, _ -> },
+    val onBorrar: (Long) -> Unit = {},
+)
+
 @Composable
 fun TutorRoute(onAbrirChat: (Long) -> Unit, viewModel: TutorViewModel = viewModel(factory = TutorViewModel.Factory)) {
     val conversaciones by viewModel.conversaciones.collectAsStateWithLifecycle()
-    TutorScreen(conversaciones, onAbrirChat, onNueva = { viewModel.nuevaConsulta(onAbrirChat) })
+    val borrada by viewModel.borrada.collectAsStateWithLifecycle()
+    val avisos = remember { SnackbarHostState() }
+    LaunchedEffect(borrada) {
+        if (borrada == null) return@LaunchedEffect
+        val r = avisos.showSnackbar("Conversación borrada", actionLabel = "Deshacer", duration = SnackbarDuration.Long)
+        if (r == SnackbarResult.ActionPerformed) viewModel.deshacerBorrado() else viewModel.olvidarBorrado()
+    }
+    TutorScreen(
+        conversaciones,
+        AccionesTutor(onAbrirChat, onNueva = { viewModel.nuevaConsulta(onAbrirChat) }, viewModel::renombrar, viewModel::borrar),
+        avisos,
+    )
 }
 
 @Composable
-fun TutorScreen(conversaciones: List<ConversacionResumen>, onAbrirChat: (Long) -> Unit, onNueva: () -> Unit) {
+fun TutorScreen(
+    conversaciones: List<ConversacionResumen>,
+    acciones: AccionesTutor,
+    avisos: SnackbarHostState = remember { SnackbarHostState() },
+    ahora: Long = System.currentTimeMillis(),
+) {
+    var renombrando by rememberSaveable { mutableStateOf<Long?>(null) }
     Box(Modifier.fillMaxSize().background(Linen).statusBarsPadding(), contentAlignment = Alignment.TopCenter) {
         LazyColumn(
             modifier = Modifier.widthIn(max = 720.dp).fillMaxSize(),
@@ -88,48 +147,37 @@ fun TutorScreen(conversaciones: List<ConversacionResumen>, onAbrirChat: (Long) -
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
-                Text("Tutor", style = MaterialTheme.typography.headlineMedium)
+                Text("Tutor", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.semantics { heading() })
                 Spacer(Modifier.height(20.dp))
-                Surface(
-                    onClick = onNueva,
-                    shape = RoundedCornerShape(28.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.fillMaxWidth().height(64.dp),
-                ) {
-                    Row(Modifier.padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Outlined.Add, contentDescription = null, tint = Paper)
-                        Spacer(Modifier.width(12.dp))
-                        Text("Nueva consulta", style = MaterialTheme.typography.titleMedium, color = Paper)
-                    }
-                }
-                Spacer(Modifier.height(20.dp))
-                Text("Conversaciones recientes", style = MaterialTheme.typography.titleMedium)
+                BotonPrincipal("Nueva pregunta", acciones.onNueva, icono = Icons.Outlined.Add, alto = 64.dp, modifier = Modifier.fillMaxWidth())
+                Spacer(Modifier.height(8.dp))
+                TituloSeccion("Tus conversaciones")
             }
             if (conversaciones.isEmpty()) {
                 item {
                     Text(
-                        "Aún no tienes conversaciones. Toca «Nueva consulta» para empezar.",
+                        "Aún no tienes conversaciones. Toca «Nueva pregunta» para empezar.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextSecondary,
                     )
                 }
             }
             items(conversaciones, key = { it.id }) { c ->
-                Surface(
-                    onClick = { onAbrirChat(c.id) },
-                    shape = RoundedCornerShape(20.dp),
-                    border = BorderStroke(1.dp, Line),
-                    color = Paper,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Row(Modifier.padding(horizontal = 20.dp, vertical = 18.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text(c.titulo, style = MaterialTheme.typography.titleMedium)
-                        }
-                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(24.dp))
-                    }
-                }
+                TarjetaConversacion(
+                    c.titulo,
+                    c.detalle(ahora),
+                    onClick = { acciones.onAbrirChat(c.id) },
+                    area = c.area,
+                    opciones = listOf(
+                        Opcion("Cambiar nombre", Icons.Outlined.Edit) { renombrando = c.id },
+                        Opcion("Borrar", Icons.Outlined.Delete, destructiva = true) { acciones.onBorrar(c.id) },
+                    ),
+                )
             }
         }
+        SnackbarHost(avisos, Modifier.align(Alignment.BottomCenter).padding(16.dp))
+    }
+    conversaciones.firstOrNull { it.id == renombrando }?.let { c ->
+        DialogoTexto("Cambiar nombre", c.titulo, onGuardar = { acciones.onRenombrar(c.id, it); renombrando = null }, onCancelar = { renombrando = null })
     }
 }

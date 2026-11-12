@@ -14,7 +14,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items as itemsGrid
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -49,14 +52,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import pe.edu.unmsm.yachaytext.YachayApplication
 import pe.edu.unmsm.yachaytext.data.LibroRepository
-import pe.edu.unmsm.yachaytext.domain.tutor.IniciarConsulta
 import pe.edu.unmsm.yachaytext.ui.common.BotonPrincipal
 import pe.edu.unmsm.yachaytext.ui.common.ChipSeleccion
 import pe.edu.unmsm.yachaytext.ui.common.EstadoVacio
 import pe.edu.unmsm.yachaytext.ui.common.TarjetaLibro
+import pe.edu.unmsm.yachaytext.ui.common.iconoArea
 import pe.edu.unmsm.yachaytext.ui.theme.Ink
 import pe.edu.unmsm.yachaytext.ui.theme.Mist
 import pe.edu.unmsm.yachaytext.ui.theme.Paper
@@ -74,7 +76,7 @@ data class BibliotecaUiState(
     val visibles: List<LibroUi> get() = filtrarLibros(libros, consulta, area)
 }
 
-class BibliotecaViewModel(repositorio: LibroRepository, private val iniciarConsulta: IniciarConsulta) : ViewModel() {
+class BibliotecaViewModel(repositorio: LibroRepository) : ViewModel() {
     private val consulta = MutableStateFlow("")
     private val area = MutableStateFlow<String?>(null)
 
@@ -92,24 +94,19 @@ class BibliotecaViewModel(repositorio: LibroRepository, private val iniciarConsu
     /** Tocar el área activa la desmarca y vuelve a «Todas». */
     fun alElegirArea(nueva: String?) = area.update { actual -> if (actual == nueva) null else nueva }
 
-    /** Mientras no exista la pantalla Detalle de libro, tocar un libro abre una consulta sobre él. */
-    fun preguntarSobre(libroId: Long, alCrear: (Long) -> Unit) {
-        viewModelScope.launch { alCrear(iniciarConsulta(libroId)) }
-    }
-
     companion object {
         val Factory = viewModelFactory {
             initializer {
-                with((this[APPLICATION_KEY] as YachayApplication).container) { BibliotecaViewModel(libroRepository, iniciarConsulta) }
+                with((this[APPLICATION_KEY] as YachayApplication).container) { BibliotecaViewModel(libroRepository) }
             }
         }
     }
 }
 
 @Composable
-fun BibliotecaRoute(onEscanear: () -> Unit, onAbrirChat: (Long) -> Unit, viewModel: BibliotecaViewModel = viewModel(factory = BibliotecaViewModel.Factory)) {
+fun BibliotecaRoute(onEscanear: () -> Unit, onAbrirLibro: (Long) -> Unit, viewModel: BibliotecaViewModel = viewModel(factory = BibliotecaViewModel.Factory)) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
-    BibliotecaScreen(estado, viewModel::alBuscar, viewModel::alElegirArea, onEscanear, onAbrirLibro = { viewModel.preguntarSobre(it, onAbrirChat) })
+    BibliotecaScreen(estado, viewModel::alBuscar, viewModel::alElegirArea, onEscanear, onAbrirLibro = onAbrirLibro)
 }
 
 @Composable
@@ -122,7 +119,7 @@ fun BibliotecaScreen(
     ahora: Long = System.currentTimeMillis(),
 ) {
     Box(Modifier.fillMaxSize().background(Linen).statusBarsPadding(), contentAlignment = Alignment.TopCenter) {
-        Column(Modifier.widthIn(max = 720.dp).fillMaxSize()) {
+        Column(Modifier.widthIn(max = 1080.dp).fillMaxSize()) {
             Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 20.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("Biblioteca", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
                 if (estado.libros.isNotEmpty()) BotonPrincipal("Escanear", onEscanear, icono = Icons.Outlined.CameraAlt)
@@ -141,13 +138,15 @@ fun BibliotecaScreen(
                 else -> {
                     Buscador(estado.consulta, onBuscar, Modifier.padding(start = 20.dp, end = 20.dp, top = 20.dp))
                     FiltroAreas(estado.areas, estado.area, onArea)
-                    LazyColumn(
+                    LazyVerticalGrid(
+                        columns = GridCells.Adaptive(270.dp),
                         modifier = Modifier.weight(1f),
                         contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         if (estado.visibles.isEmpty()) {
-                            item {
+                            item(span = { GridItemSpan(maxLineSpan) }) {
                                 EstadoVacio(
                                     icono = Icons.Outlined.SearchOff,
                                     titulo = "No encontramos ese libro",
@@ -157,7 +156,7 @@ fun BibliotecaScreen(
                                 )
                             }
                         }
-                        items(estado.visibles, key = { it.id }) { libro ->
+                        itemsGrid(estado.visibles, key = { it.id }) { libro ->
                             TarjetaLibro(libro, ahora, onClick = { onAbrirLibro(libro.id) })
                         }
                     }
@@ -199,6 +198,6 @@ private fun FiltroAreas(areas: List<String>, seleccionada: String?, onArea: (Str
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         item { ChipSeleccion("Todas", seleccionada == null, { onArea(null) }) }
-        items(areas) { area -> ChipSeleccion(area, seleccionada == area, { onArea(area) }) }
+        items(areas) { area -> ChipSeleccion(area, seleccionada == area, { onArea(area) }, icono = iconoArea(area)) }
     }
 }

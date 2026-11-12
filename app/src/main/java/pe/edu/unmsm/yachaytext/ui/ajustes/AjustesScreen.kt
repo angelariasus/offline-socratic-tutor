@@ -21,7 +21,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
-import androidx.compose.material.icons.outlined.WifiOff
+import androidx.compose.material.icons.outlined.OfflinePin
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import pe.edu.unmsm.yachaytext.ui.common.DialogoAyuda
+import pe.edu.unmsm.yachaytext.ui.common.SelectorGrado
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -138,6 +146,8 @@ fun AjustesRoute(viewModel: AjustesViewModel = viewModel(factory = AjustesViewMo
 @Composable
 fun AjustesScreen(estado: AjustesUiState, acciones: AccionesAjustes) {
     val p = estado.preferencias
+    var ayuda by rememberSaveable { mutableStateOf(false) }
+    if (ayuda) DialogoAyuda(onCerrar = { ayuda = false })
     Box(Modifier.fillMaxSize().background(Linen).statusBarsPadding(), contentAlignment = Alignment.TopCenter) {
         Column(
             Modifier.widthIn(max = 720.dp).fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
@@ -146,11 +156,9 @@ fun AjustesScreen(estado: AjustesUiState, acciones: AccionesAjustes) {
             Cabecera(estado.nombre, p.grado)
 
             Seccion("Perfil") {
+                Subtitulo("Nombre")
                 CampoTexto(estado.nombre, acciones.onNombre, "Tu nombre", modifier = Modifier.fillMaxWidth())
-                Subtitulo("Grado")
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    GRADOS.forEach { g -> ChipSeleccion(g, p.grado == g, { acciones.onGrado(g) }) }
-                }
+                SelectorGrado(p.grado, acciones.onGrado)
             }
 
             Seccion("Quechua") {
@@ -191,8 +199,13 @@ fun AjustesScreen(estado: AjustesUiState, acciones: AccionesAjustes) {
                 Text(p.nivelAyuda.descripcion, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
             }
 
+            Seccion("Ayuda") {
+                Text("Repasa los pasos para usar Yachay con tus libros.", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+                BotonSecundario("Cómo usar Yachay", { ayuda = true }, icono = Icons.AutoMirrored.Outlined.HelpOutline)
+            }
+
             Row(Modifier.padding(top = 8.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Outlined.WifiOff, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(18.dp))
+                Icon(Icons.Outlined.OfflinePin, contentDescription = null, tint = Brand, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(
                     "YachayText 0.1.0 · Funciona sin internet. Tus datos se guardan solo en este dispositivo.",
@@ -222,7 +235,7 @@ private fun Cabecera(nombre: String, grado: String?) {
 
 @Composable
 private fun Seccion(titulo: String, contenido: @Composable () -> Unit) {
-    Text(titulo, style = MaterialTheme.typography.titleMedium, color = TextSecondary, modifier = Modifier.padding(top = 8.dp))
+    Text(titulo, style = MaterialTheme.typography.titleMedium, color = TextSecondary, modifier = Modifier.padding(top = 8.dp).semantics { heading() })
     Surface(color = Mist, shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) { contenido() }
     }

@@ -37,7 +37,7 @@ class FlujoBienvenidaTest {
         composeRule.setContent { YachayTheme { YachayApp(rutaInicial = RUTA_BIENVENIDA) } }
 
         composeRule.onNode(hasSetTextAction()).performTextInput("Ana")
-        composeRule.onNodeWithText("3.º de primaria").performClick()
+        composeRule.onNodeWithText("3.º").performScrollTo().performClick()
         composeRule.onNodeWithText("Empezar").performScrollTo().performClick()
 
         composeRule.waitUntilAtLeastOneExists(hasText("Ana"), 5_000)

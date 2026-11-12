@@ -16,6 +16,12 @@ interface LibroDao {
     @Query("SELECT * FROM libro WHERE id_libro = :id")
     suspend fun getById(id: Long): LibroEntity?
 
+    @Query("SELECT * FROM libro WHERE id_libro = :id")
+    fun observe(id: Long): Flow<LibroEntity?>
+
+    @Query("UPDATE libro SET titulo = :titulo WHERE id_libro = :id")
+    suspend fun renombrar(id: Long, titulo: String)
+
     @Query("SELECT COUNT(*) FROM libro")
     suspend fun count(): Int
 
@@ -37,6 +43,9 @@ data class FragmentoConLibro(
     val embedding: ByteArray,
 )
 
+/** Texto de un fragmento sin su vector, para mostrar las páginas de un libro. */
+data class TextoFragmento(val nroPagina: Int, val orden: Int, val texto: String)
+
 /** Cambia cada vez que se insertan o borran fragmentos (los ids nuevos siempre crecen). */
 data class VersionFragmentos(val total: Int, val maxId: Long?)
 
@@ -47,6 +56,18 @@ interface FragmentoDao {
 
     @Query("SELECT * FROM fragmento WHERE id_libro = :libroId ORDER BY nro_pagina, orden")
     suspend fun getByLibro(libroId: Long): List<FragmentoEntity>
+
+    @Query("SELECT nro_pagina AS nroPagina, orden, texto FROM fragmento WHERE id_libro = :libroId ORDER BY nro_pagina, orden")
+    fun observeTextos(libroId: Long): Flow<List<TextoFragmento>>
+
+    @Query("SELECT nro_pagina AS nroPagina, orden, texto FROM fragmento WHERE id_libro = :libroId AND nro_pagina = :nroPagina ORDER BY orden")
+    suspend fun textosPagina(libroId: Long, nroPagina: Int): List<TextoFragmento>
+
+    @Query("SELECT id_fragmento FROM fragmento WHERE id_fragmento IN (:ids)")
+    suspend fun existentes(ids: List<Long>): List<Long>
+
+    @Query("SELECT DISTINCT nro_pagina FROM fragmento WHERE id_libro = :libroId")
+    suspend fun paginas(libroId: Long): List<Int>
 
     /** Todos los fragmentos con su libro, para la búsqueda por coseno en memoria (RNF04). */
     @Query(
@@ -78,6 +99,9 @@ interface ConversacionDao {
 
     @Query("UPDATE conversacion SET titulo = :titulo WHERE id_conversacion = :id")
     suspend fun renombrar(id: Long, titulo: String)
+
+    @Query("DELETE FROM conversacion WHERE id_conversacion = :id")
+    suspend fun delete(id: Long)
 }
 
 @Dao
@@ -85,23 +109,34 @@ interface MensajeDao {
     @Insert
     suspend fun insert(mensaje: MensajeEntity): Long
 
+    @Insert
+    suspend fun insertAll(mensajes: List<MensajeEntity>)
+
+    @Query("SELECT * FROM mensaje WHERE id_conversacion = :conversacionId ORDER BY fecha_hora, id_mensaje")
+    suspend fun getByConversacion(conversacionId: Long): List<MensajeEntity>
+
     @Query("SELECT * FROM mensaje WHERE id_conversacion = :conversacionId ORDER BY fecha_hora, id_mensaje")
     fun observeByConversacion(conversacionId: Long): Flow<List<MensajeEntity>>
 }
 
 /** Libro y página de un fragmento usado para responder un mensaje. */
-data class FuenteMensaje(val mensajeId: Long, val titulo: String, val nroPagina: Int, val puntaje: Float)
+data class FuenteMensaje(val mensajeId: Long, val libroId: Long, val titulo: String, val nroPagina: Int, val puntaje: Float)
 
 @Dao
 interface ContextoRecuperadoDao {
     @Insert
     suspend fun insertAll(contextos: List<ContextoRecuperadoEntity>)
 
+    @Query(
+        "SELECT cr.* FROM contexto_recuperado cr JOIN mensaje m ON m.id_mensaje = cr.id_mensaje WHERE m.id_conversacion = :conversacionId",
+    )
+    suspend fun getByConversacion(conversacionId: Long): List<ContextoRecuperadoEntity>
+
     @Query("SELECT * FROM contexto_recuperado WHERE id_mensaje = :mensajeId ORDER BY puntaje_coseno DESC")
     suspend fun getByMensaje(mensajeId: Long): List<ContextoRecuperadoEntity>
 
     @Query(
-        "SELECT cr.id_mensaje AS mensajeId, l.titulo AS titulo, f.nro_pagina AS nroPagina, cr.puntaje_coseno AS puntaje " +
+        "SELECT cr.id_mensaje AS mensajeId, l.id_libro AS libroId, l.titulo AS titulo, f.nro_pagina AS nroPagina, cr.puntaje_coseno AS puntaje " +
             "FROM contexto_recuperado cr " +
             "JOIN fragmento f ON f.id_fragmento = cr.id_fragmento " +
             "JOIN libro l ON l.id_libro = f.id_libro " +

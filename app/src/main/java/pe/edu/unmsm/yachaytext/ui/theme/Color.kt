@@ -21,4 +21,8 @@ val TextDisabled = Color(0xFF9A948A)
 val Quechua = Color(0xFF8A4B08)
 val QuechuaContainer = Color(0xFFFFF1E0)
 
+// Avisos de prevención de errores (por ejemplo, reemplazar una página): 7.2:1.
+val Aviso = Color(0xFF6E4A00)
+val AvisoContainer = Color(0xFFFFF3CC)
+
 val Danger = Color(0xFFB3261E)

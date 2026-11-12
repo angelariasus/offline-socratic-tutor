@@ -33,7 +33,7 @@ class FlujoChatTest {
         composeRule.setContent { YachayTheme { YachayApp() } }
 
         composeRule.onNodeWithText("Tutor").performClick()
-        composeRule.onNodeWithText("Nueva consulta").performClick()
+        composeRule.onNodeWithText("Nueva pregunta").performClick()
         composeRule.waitUntilAtLeastOneExists(hasText("¿Qué crees que necesita", substring = true), 5_000)
 
         composeRule.onNode(hasSetTextAction()).performTextInput("¿luz?")

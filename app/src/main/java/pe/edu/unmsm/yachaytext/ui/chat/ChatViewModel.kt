@@ -58,13 +58,17 @@ class ChatViewModel(
             combine(repositorio.observarMensajes(conversacionId), repositorio.observarFuentes(conversacionId)) { mensajes, fuentes ->
                 val porMensaje = fuentes.groupBy { it.mensajeId }
                 mensajes.map { m ->
+                    val citadas = porMensaje[m.id].orEmpty()
+                    val principal = citadas.maxByOrNull { it.puntaje }
                     MensajeUi(
                         id = m.id,
                         rol = m.rol,
                         texto = m.contenido,
                         porVoz = m.porVoz,
                         coincidencias = if (m.rol == RolMensaje.TUTOR) glosario.buscar(m.contenido) else emptyList(),
-                        fuente = porMensaje[m.id]?.let(::describirFuente),
+                        fuente = describirFuente(citadas),
+                        fuenteLibroId = principal?.libroId,
+                        fuentePaginas = citadas.filter { it.libroId == principal?.libroId }.map { it.nroPagina }.distinct().sorted(),
                     )
                 }
             }.collect { mensajes -> _estado.update { it.copy(mensajes = mensajes) } }
@@ -97,6 +101,18 @@ class ChatViewModel(
     }
 
     fun usarAtajo(atajo: Atajo) = enviar(atajo.consulta)
+
+    /** Abre las páginas citadas en una respuesta, para leer la fuente completa. */
+    fun abrirFuente(mensaje: MensajeUi) {
+        val libroId = mensaje.fuenteLibroId ?: return
+        viewModelScope.launch {
+            val titulo = libros.obtener(libroId)?.titulo ?: return@launch
+            val paginas = mensaje.fuentePaginas.mapNotNull { libros.pagina(libroId, it) }
+            if (paginas.isNotEmpty()) _estado.update { it.copy(fuenteAbierta = FuenteAbierta(titulo, paginas)) }
+        }
+    }
+
+    fun cerrarFuente() = _estado.update { it.copy(fuenteAbierta = null) }
 
     fun alternarLectura(mensaje: MensajeUi) {
         if (_estado.value.leyendoId == mensaje.id) {

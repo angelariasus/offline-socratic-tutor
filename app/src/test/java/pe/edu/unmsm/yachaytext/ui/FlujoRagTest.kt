@@ -49,6 +49,9 @@ class FlujoRagTest {
         composeRule.setContent { YachayTheme { YachayApp() } }
         composeRule.onNodeWithText("Biblioteca").performClick()
         composeRule.onNodeWithText("Ciencia y Tecnología 5").performClick()
+        // Detalle del libro: la página escaneada y la acción de preguntar.
+        composeRule.waitUntilAtLeastOneExists(hasText("Página 42"), 5_000)
+        composeRule.onNodeWithText("Preguntar sobre este libro").performClick()
         composeRule.waitUntilAtLeastOneExists(hasText("Vamos a estudiar", substring = true), 5_000)
 
         composeRule.onNode(hasSetTextAction()).performTextInput("¿Qué absorben las raíces?")
@@ -57,5 +60,9 @@ class FlujoRagTest {
         composeRule.waitUntilAtLeastOneExists(hasText("página 42", substring = true), 10_000)
         composeRule.waitUntilAtLeastOneExists(hasText("Ciencia y Tecnología 5 · pág. 42"), 5_000)
         composeRule.onRoot().captureRoboImage("screenshots/flujo_rag.png")
+
+        // La cita abre el texto completo de la página (transparencia de la fuente).
+        composeRule.onNodeWithContentDescription("Ver Ciencia y Tecnología 5 · pág. 42").performClick()
+        composeRule.waitUntilAtLeastOneExists(hasText("dióxido de carbono", substring = true), 5_000)
     }
 }

@@ -9,6 +9,9 @@ class BorradorEscaneo {
     private val _texto = MutableStateFlow<String?>(null)
     val texto: StateFlow<String?> = _texto.asStateFlow()
 
+    /** Libro desde el que se empezó a escanear: la revisión lo propone primero. */
+    var libroPreferido: Long? = null
+
     fun guardar(texto: String) {
         _texto.value = texto
     }
