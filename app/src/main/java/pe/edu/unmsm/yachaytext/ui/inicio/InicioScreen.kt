@@ -69,7 +69,6 @@ import pe.edu.unmsm.yachaytext.domain.tutor.IniciarConsulta
 import pe.edu.unmsm.yachaytext.ui.biblioteca.LibroUi
 import pe.edu.unmsm.yachaytext.ui.common.ConversacionResumen
 import pe.edu.unmsm.yachaytext.ui.common.EstadoVacio
-import pe.edu.unmsm.yachaytext.ui.common.PaisajeAndino
 import pe.edu.unmsm.yachaytext.ui.common.PortadaLibro
 import pe.edu.unmsm.yachaytext.ui.common.TarjetaPortada
 import pe.edu.unmsm.yachaytext.ui.common.TituloSeccion
@@ -166,7 +165,7 @@ fun InicioScreen(estado: InicioUiState, acciones: AccionesInicio, ahora: Long = 
         if (maxWidth >= 840.dp) {
             // Pantalla ancha: la portada a todo el ancho y, debajo, conversaciones y libros lado a lado.
             LazyColumn(Modifier.widthIn(max = 1200.dp).fillMaxSize(), contentPadding = relleno) {
-                cabecera(estado, acciones, alto = 200.dp)
+                cabecera(estado, acciones, alto = 184.dp)
                 item {
                     Row(verticalAlignment = Alignment.Top) {
                         Column(Modifier.weight(1f)) { ColumnaConversaciones(estado, acciones, ahora) }
@@ -186,7 +185,7 @@ fun InicioScreen(estado: InicioUiState, acciones: AccionesInicio, ahora: Long = 
 
 private fun Modifier.margen() = padding(horizontal = Margen)
 
-private fun LazyListScope.cabecera(estado: InicioUiState, acciones: AccionesInicio, alto: Dp = 248.dp) {
+private fun LazyListScope.cabecera(estado: InicioUiState, acciones: AccionesInicio, alto: Dp = 200.dp) {
     item { Portada(estado.nombre, acciones, alto, Modifier.margen()) }
     if (!estado.cargando && estado.conversaciones.isEmpty() && estado.libros.isEmpty()) {
         item {
@@ -270,21 +269,23 @@ private fun ColumnaLibros(estado: InicioUiState, acciones: AccionesInicio, ahora
 /** Saludo y las dos acciones principales en un solo bloque: el ancla visual de Inicio. */
 @Composable
 private fun Portada(nombre: String?, acciones: AccionesInicio, alto: Dp, modifier: Modifier = Modifier) {
-    // Sin recuadro: el saludo va directo sobre el fondo y el paisaje queda como ilustración suelta.
-    Column(modifier.fillMaxWidth()) {
-        Box(Modifier.fillMaxWidth().height(alto - 72.dp)) {
-            PaisajeAndino()
-            Column(Modifier.fillMaxWidth(0.62f).align(Alignment.BottomStart).padding(bottom = 8.dp)) {
-                Text(if (nombre != null) "Hola," else "Hola", style = MaterialTheme.typography.titleLarge, color = TextSecondary)
-                Text(nombre ?: "¿Qué aprendemos hoy?", style = MaterialTheme.typography.displaySmall, color = Ink, modifier = Modifier.semantics { heading() })
-            }
+    Box(
+        modifier
+            .fillMaxWidth()
+            .height(alto)
+            .clip(RoundedCornerShape(32.dp))
+            .background(Brand),
+    ) {
+        Column(Modifier.padding(start = 24.dp, end = 24.dp, top = 28.dp)) {
+            Text(if (nombre != null) "Hola," else "Hola", style = MaterialTheme.typography.titleLarge, color = Paper)
+            Text(nombre ?: "¿Qué aprendemos hoy?", style = MaterialTheme.typography.displaySmall, color = Paper, modifier = Modifier.semantics { heading() })
         }
         Row(
-            Modifier.widthIn(max = 560.dp).fillMaxWidth().padding(top = 16.dp),
+            Modifier.align(Alignment.BottomStart).widthIn(max = 560.dp).fillMaxWidth().padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            AccionPortada("Pregúntale a Yachay", Icons.Outlined.Forum, Brand, Paper, acciones.onPreguntar, Modifier.weight(1.4f))
-            AccionPortada("Escanear", Icons.Outlined.CameraAlt, BrandSoft, Brand, acciones.onEscanear, Modifier.weight(1f))
+            AccionPortada("Pregúntale a Yachay", Icons.Outlined.Forum, Paper, Ink, acciones.onPreguntar, Modifier.weight(1.4f))
+            AccionPortada("Escanear", Icons.Outlined.CameraAlt, Paper.copy(alpha = 0.18f), Paper, acciones.onEscanear, Modifier.weight(1f))
         }
     }
 }
